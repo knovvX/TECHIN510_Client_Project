@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 依赖目录
 node_modules/
 figma-mcp-proxy/
@@ -16,11 +17,43 @@ figma_assets/
 Thumbs.db
 
 # 编辑器文件
+=======
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.env
+
+# IDE
+>>>>>>> fc355e8e222ed4f013b6655b930c1af971462dcd
 .idea/
 .vscode/
 *.swp
 *.swo
 
+<<<<<<< HEAD
 # 日志
 *.log
 log_update.txt
@@ -35,3 +68,34 @@ log_update.txt
 
 # 忽略venv目录
 venv/
+=======
+# Misc
+.DS_Store
+desktop.ini
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Local development settings
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Database
+*.db
+*.sqlite3
+
+# Media files
+uploads/
+media/
+*.mp4
+*.mp3
+*.wav
+*.avi
+*.mov
+*.wmv
+*.flv 
+>>>>>>> fc355e8e222ed4f013b6655b930c1af971462dcd
