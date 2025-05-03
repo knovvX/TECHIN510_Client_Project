@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Flow - Scrapbook Editor</title>
+    <link rel="stylesheet" href="editor.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 添加html2canvas库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- 引入工具类 -->
+    <script src="js/local-storage-manager.js"></script>
+    <script src="js/file-system-access.js"></script>
+    
+    <!-- 内联简单保存功能 -->
+    <script>
+    // Simple save functionality to avoid complex dependencies
+    function simpleSaveCanvas() {
+        console.log('Executing simple save function...');
+        
+        // Get the canvas element
+        const canvas = document.querySelector('.scrapbook-page');
+        if (!canvas) {
+            console.error('Canvas element not found');
+            return;
+        }
+        
+        // Use html2canvas
+        html2canvas(canvas, {
+            allowTaint: true,
+            useCORS: true,
+            backgroundColor: null
+        }).then(function(canvas) {
+            // Save as PNG
+            const imgData = canvas.toDataURL('image/png');
+            console.log('Generated image data length:', imgData.length);
+            
+            // Get title
+            const titleInput = document.getElementById('journal-title');
+            const title = titleInput ? titleInput.value.trim() : 'Journal - ' + new Date().toLocaleDateString();
+            
+            // Get current journal ID from URL if available
+            const urlParams = new URLSearchParams(window.location.search);
+            const journalId = urlParams.get('id') || 'journal_' + new Date().getTime();
+            
+            // Build save data for localStorage
+            const now = new Date();
+            const journalData = {
+                id: journalId,
+                title: title,
+                date: now.toISOString(),
+                imageUrl: imgData, // Save full image data to localStorage
+                created: now.getTime(),
+                lastEdited: now.getTime()
+            };
+            
+            // Save to localStorage
+            LocalStorageManager.saveJournal(journalData);
+            
+            // Set global variable to mark as saved
+            console.log('Save successful, resetting unsaved state flag');
+            window.hasUnsavedChanges = false;
+            window.lastSaveTime = now.getTime();
+            
+            // Immediately redirect to myjournal page
+            console.log('Save successful, redirecting to myjournal page');
+            window.location.href = 'journal.html';
+        }).catch(function(error) {
+            console.error('Save failed:', error);
+        });
+    }
+    
+    // Initialize save function
+    document.addEventListener('DOMContentLoaded', function() {
+        // Debug localStorage journals
+        try {
+            const journals = LocalStorageManager.getAllJournals();
+            console.log('Journal count:', journals.length);
+        } catch (e) {
+            console.error('Error checking localStorage journals:', e);
+        }
+        
+        // Directly bind save button click event - Save and redirect
+        const saveBtn = document.getElementById('save-btn');
+        if (saveBtn) {
+            saveBtn.addEventListener('click', function() {
+                console.log('Save button clicked');
+                // Save directly without confirmation and redirect
+                simpleSaveCanvas();
+            });
+        }
+        
+        // Preview button event
+        const previewBtn = document.getElementById('preview-btn');
+        if (previewBtn) {
+            previewBtn.addEventListener('click', function() {
+                console.log('Preview button clicked');
+                const previewModal = document.getElementById('preview-modal');
+                if (previewModal) {
+                    previewModal.classList.add('active');
+                    if (typeof previewCanvas === 'function') previewCanvas();
+                }
+            });
+        }
+        
+        // Print button event
+        const printBtn = document.getElementById('print-btn');
+        if (printBtn) {
+            printBtn.addEventListener('click', function() {
+                console.log('Print button clicked');
+                if (typeof printCanvas === 'function') printCanvas();
+            });
+        }
+        
+        // Return button event
+        const closeBtn = document.getElementById('close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                console.log('Return button clicked');
+                // Save and return
+                simpleSaveCanvas();
+            });
+        }
+        
+        // Check if URL contains journal ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const journalId = urlParams.get('id');
+        if (journalId) {
+            console.log('Editing existing journal:', journalId);
+            // Load journal title if available
+            try {
+                const journal = LocalStorageManager.getJournalById(journalId);
+                if (journal) {
+                    const titleInput = document.getElementById('journal-title');
+                    if (titleInput) {
+                        titleInput.value = journal.title;
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading journal title:', e);
+            }
+        }
+    });
+    </script>
+    
+    <!-- 添加离开页面前的检查 -->
+    <script>
+    // 跟踪编辑状态
+    window.hasUnsavedChanges = false; // 使用全局变量，确保其他脚本可以访问
+    window.lastSaveTime = null;
+    
+    // 定义beforeunload处理函数
+    function beforeUnloadHandler(e) {
+        // 先检查全局变量
+        if (window.hasUnsavedChanges === false) {
+            // 如果标记为已保存，则不显示提示
+            console.log('内容已保存，允许离开页面');
+            return undefined;
+        }
+        
+        // 显示提示给用户
+        const confirmationMessage = '您有未保存的更改，确定要离开吗？';
+        e.returnValue = confirmationMessage;
+        return confirmationMessage;
+    }
+    
+    // 监听页面内容变化
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('初始化编辑状态检测');
+        
+        // 保存beforeunload处理函数引用
+        window._beforeUnloadHandler = beforeUnloadHandler;
+        window.addEventListener('beforeunload', beforeUnloadHandler);
+        
+        // 3秒后开始跟踪变化（给页面加载时间）
+        setTimeout(() => {
+            // 初始状态设为未修改
+            window.hasUnsavedChanges = false;
+            console.log('开始跟踪页面变化');
+            
+            // 当用户拖动元素时标记为有变化
+            document.addEventListener('mouseup', function(event) {
+                const canvasArea = document.querySelector('.scrapbook-page');
+                if (canvasArea && canvasArea.contains(event.target)) {
+                    window.hasUnsavedChanges = true;
+                    console.log('检测到内容变化 (mouseup)');
+                }
+            });
+            
+            // 监听文本输入
+            document.addEventListener('input', function(event) {
+                const canvasArea = document.querySelector('.scrapbook-page');
+                if (canvasArea && canvasArea.contains(event.target)) {
+                    window.hasUnsavedChanges = true;
+                    console.log('检测到文本输入变化');
+                }
+            });
+            
+            // 添加拖放和其他交互元素的更改检测
+            const editorContainer = document.querySelector('#journal-canvas');
+            if (editorContainer) {
+                // 监听元素添加和删除
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        if (mutation.type === 'childList' || 
+                            mutation.type === 'attributes' || 
+                            mutation.type === 'characterData') {
+                            window.hasUnsavedChanges = true;
+                            console.log('检测到DOM变化', mutation.type);
+                        }
+                    });
+                });
+                
+                observer.observe(editorContainer, {
+                    childList: true,
+                    subtree: true,
+                    attributes: true,
+                    characterData: true
+                });
+            }
+        }, 3000);
+    });
+    </script>
+    
+    <style>
+        /* Resizing handles for elements */
+        .canvas-element {
+            position: relative;
+        }
+        .canvas-element.selected .resize-handle {
+            display: block;
+        }
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #ffffff;
+            border: 1px solid #0066ff;
+            border-radius: 50%;
+            display: none;
+        }
+        .resize-handle.nw {
+            top: -5px;
+            left: -5px;
+            cursor: nw-resize;
+        }
+        .resize-handle.ne {
+            top: -5px;
+            right: -5px;
+            cursor: ne-resize;
+        }
+        .resize-handle.sw {
+            bottom: -5px;
+            left: -5px;
+            cursor: sw-resize;
+        }
+        .resize-handle.se {
+            bottom: -5px;
+            right: -5px;
+            cursor: se-resize;
+        }
+        .rotation-handle {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 15px;
+            background-color: #ffffff;
+            border: 1px solid #ff6600;
+            border-radius: 50%;
+            cursor: pointer;
+            display: none;
+        }
+        .canvas-element.selected .rotation-handle {
+            display: block;
+        }
+        
+        /* Note colors */
+        .note-element.yellow { background-color: #fffacd; }
+        .note-element.blue { background-color: #add8e6; }
+        .note-element.green { background-color: #90ee90; }
+        .note-element.pink { background-color: #ffb6c1; }
+        .note-element.purple { background-color: #e6e6fa; }
+        
+        /* Doodle styles */
+        .doodle-canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            pointer-events: none;
+        }
+        .doodle-canvas.active {
+            pointer-events: auto;
+            cursor: crosshair;
+        }
+        
+        /* Sticker modal grid */
+        .sticker-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            height: 500px;
+            padding: 10px;
+        }
+        
+        .sticker-item {
+            width: 100%;
+            padding-bottom: 100%;
+            position: relative;
+            border: 1px solid #eee;
+            border-radius: 5px;
+            overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            background-color: #f9f9f9;
+        }
+        
+        .sticker-item:hover {
+            transform: scale(1.05);
+            border-color: #0066ff;
+            box-shadow: 0 2px 6px rgba(0, 102, 255, 0.3);
+            z-index: 1;
+        }
+        
+        .sticker-item img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 5px;
+            transition: padding 0.2s;
+        }
+        
+        .sticker-item:hover img {
+            padding: 2px;
+        }
+        
+        .sticker-item.load-error {
+            background-color: #ffeeee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #cc0000;
+        }
+        
+        /* 贴纸分类标题样式 */
+        .sticker-category-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 10px 0;
+            padding: 5px 10px;
+            background-color: #f0f8ff;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        /* 贴纸模态框样式优化 */
+        .sticker-modal-content {
+            max-width: 600px;
+            width: 90%;
+        }
+        
+        /* Category selector */
+        .category-selector {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+        .category-button {
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .category-button:hover, .category-button.active {
+            background-color: #0066ff;
+            color: white;
+            border-color: #0044cc;
+        }
+        
+        /* 贴纸类别样式 */
+        .sticker-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 15px;
+            max-height: 100px;
+            overflow-y: auto;
+            padding: 5px;
+            scrollbar-width: thin;
+        }
+        
+        .sticker-categories::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .sticker-categories::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 3px;
+        }
+        
+        .category-btn {
+            padding: 5px 8px;
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        
+        .category-btn:hover, .category-btn.active {
+            background-color: #0066ff;
+            color: white;
+            border-color: #0044cc;
+        }
+        
+        /* 模态窗口样式增强 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .save-preview {
+            margin-top: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 4px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <header class="editor-header">
+        <div class="logo">Frame Flow</div>
+        <nav class="editor-nav">
+            <button id="save-btn" class="editor-btn">Save</button>
+            <button id="preview-btn" class="editor-btn">Preview</button>
+            <button id="print-btn" class="editor-btn">Print</button>
+            <button id="close-btn" class="editor-btn">Return</button>
+        </nav>
+    </header>
+    
+    <main class="editor-main">
+        <!-- Sidebar for materials -->
+        <div class="editor-sidebar">
+            <div class="sidebar-tabs">
+                <div class="tab active" data-tab="upload">Upload</div>
+                <div class="tab" data-tab="media">Media</div>
+                <div class="tab" data-tab="components">Elements</div>
+                <div class="tab" data-tab="decorative">Decorative</div>
+                <div class="tab" data-tab="stickers">Stickers</div>
+            </div>
+            
+            <div class="tab-content active" id="upload-content">
+                <div class="upload-area">
+                    <img src="images/upload-icon.svg" alt="Upload" class="upload-icon">
+                    <p>Drag and drop files here</p>
+                    <p>or</p>
+                    <button class="upload-btn">Browse Files</button>
+                    <input type="file" id="file-upload" accept="image/*" multiple style="display: none;">
+                </div>
+            </div>
+            
+            <div class="tab-content" id="media-content">
+                <div class="media-filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="images">Images</button>
+                    <button class="filter-btn" data-filter="stickers">Stickers</button>
+                    <button class="filter-btn" data-filter="decorations">Decorations</button>
+                </div>
+                <div class="media-grid">
+                    <!-- Media content will be displayed here -->
+                </div>
+            </div>
+            
+            <div class="tab-content" id="components-content">
+                <div class="component-category">
+                    <h3>Basic Elements</h3>
+                    <div class="component-items">
+                        <div class="component-item" draggable="true" data-type="text">
+                            <span class="component-icon">T</span>
+                            <span>Text</span>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="image">
+                            <span class="component-icon">🖼️</span>
+                            <span>Image</span>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="note">
+                            <span class="component-icon">📝</span>
+                            <span>Note</span>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="polaroid">
+                            <span class="component-icon">📷</span>
+                            <span>Polaroid</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="component-category">
+                    <h3>Decorative Elements</h3>
+                    <div class="component-items">
+                        <div class="component-item" id="sticker-btn" draggable="true" data-type="sticker">
+                            <span class="component-icon">🏷️</span>
+                            <span>Sticker</span>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="tape">
+                            <span class="component-icon">📎</span>
+                            <span>Tape</span>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="frame">
+                            <span class="component-icon">⬜</span>
+                            <span>Frame</span>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="doodle">
+                            <span class="component-icon">✏️</span>
+                            <span>Doodle</span>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+                
+            <div class="tab-content" id="decorative-content">
+                <div class="component-category">
+                    <h3>Stickers & Decorations</h3>
+                    <p>Click the icons below to see available stickers:</p>
+                    <div class="component-items">
+                        <div class="component-item decorative-item" id="decorative-sticker-btn" data-type="sticker">
+                            <span class="component-icon">🏷️</span>
+                            <span>Stickers</span>
+                        </div>
+                        <div class="component-item decorative-item" data-type="tape">
+                            <span class="component-icon">📎</span>
+                            <span>Tape</span>
+                        </div>
+                        <div class="component-item decorative-item" data-type="frame">
+                            <span class="component-icon">⬜</span>
+                            <span>Frame</span>
+                        </div>
+                        <div class="component-item decorative-item" data-type="doodle">
+                            <span class="component-icon">✏️</span>
+                            <span>Doodle</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Canvas for editing -->
+        <div class="editor-canvas-container">
+            <div class="scrapbook-canvas" id="journal-canvas">
+                <!-- Content will be added here -->
+                <div class="scrapbook-page">
+                    <div class="scrapbook-background"></div>
+                    <div class="scrapbook-elements">
+                        <!-- Elements will be added here -->
+                    </div>
+                    <canvas class="doodle-canvas" width="800" height="1000"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Properties panel -->
+        <div class="editor-properties">
+            <div class="properties-section">
+                <h3>Journal Information</h3>
+                <div class="property-group">
+                    <label for="journal-title">Title</label>
+                    <input type="text" id="journal-title" placeholder="Enter journal title">
+                </div>
+                <div class="property-group">
+                    <label for="journal-description">Description</label>
+                    <textarea id="journal-description" placeholder="Enter journal description"></textarea>
+                </div>
+            </div>
+            
+            <div class="properties-section" id="element-properties">
+                <h3>Element Properties</h3>
+                <div class="property-group">
+                    <label for="element-rotation">Rotation</label>
+                    <input type="range" id="element-rotation" min="-30" max="30" value="0">
+                    <span id="rotation-value">0°</span>
+                </div>
+                <div class="property-group">
+                    <label for="element-scale">Scale</label>
+                    <input type="range" id="element-scale" min="50" max="150" value="100">
+                    <span id="scale-value">100%</span>
+                </div>
+                <div class="property-group">
+                    <label for="element-layer">Layer</label>
+                    <div class="layer-buttons">
+                        <button id="bring-front">Bring Forward</button>
+                        <button id="send-back">Send Backward</button>
+                </div>
+                </div>
+                
+                <!-- Text-specific properties -->
+                <div class="text-properties property-section">
+                    <h3>Text Style</h3>
+                    <div class="property-group">
+                        <label for="text-font">Font</label>
+                        <select id="text-font">
+                            <option value="Poppins">Poppins</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Courier New">Courier New</option>
+                        </select>
+                    </div>
+                    <div class="property-group">
+                        <label for="text-size">Size</label>
+                        <input type="number" id="text-size" placeholder="Font size" value="16">
+                    </div>
+                    <div class="property-group">
+                        <label for="text-color">Color</label>
+                        <input type="color" id="text-color" value="#000000">
+                    </div>
+                    <div class="property-group text-style-buttons">
+                        <button id="bold-btn" class="style-btn">B</button>
+                        <button id="italic-btn" class="style-btn">I</button>
+                        <button id="underline-btn" class="style-btn">U</button>
+                    </div>
+                </div>
+                
+                <!-- Note-specific properties -->
+                <div class="note-properties property-section">
+                    <h3>Note Style</h3>
+                    <div class="property-group">
+                        <label>Note Color</label>
+                        <div class="note-color-buttons">
+                            <button class="note-color-btn yellow" data-color="yellow"></button>
+                            <button class="note-color-btn blue" data-color="blue"></button>
+                            <button class="note-color-btn green" data-color="green"></button>
+                            <button class="note-color-btn pink" data-color="pink"></button>
+                            <button class="note-color-btn purple" data-color="purple"></button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Doodle-specific properties -->
+                <div class="doodle-properties property-section">
+                    <h3>Doodle Tool</h3>
+                    <div class="property-group">
+                        <label for="doodle-color">Color</label>
+                        <input type="color" id="doodle-color" value="#000000">
+                    </div>
+                    <div class="property-group">
+                        <label for="doodle-size">Size</label>
+                        <input type="range" id="doodle-size" min="1" max="20" value="3">
+                        <span id="doodle-size-value">3px</span>
+                    </div>
+                    <div class="property-group">
+                        <button id="doodle-start-btn">Start Drawing</button>
+                        <button id="doodle-clear-btn">Clear</button>
+                    </div>
+                </div>
+                
+                <!-- Sticker-specific properties -->
+                <div class="sticker-properties property-section">
+                    <h3>Sticker Style</h3>
+                    <div class="property-group">
+                        <label for="sticker-opacity">Opacity</label>
+                        <input type="range" id="sticker-opacity" min="20" max="100" value="100">
+                        <span id="opacity-value">100%</span>
+                    </div>
+                    <div class="property-group">
+                        <label>Edge Style</label>
+                        <div class="edge-style-buttons">
+                            <button id="edge-normal" class="edge-btn active">Normal</button>
+                            <button id="edge-torn" class="edge-btn">Torn</button>
+                            <button id="edge-polaroid" class="edge-btn">Polaroid</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="properties-section">
+                <h3>Page Settings</h3>
+                <div class="property-group">
+                    <label for="page-background">Background Color</label>
+                    <input type="color" id="page-background" value="#f5f3f0">
+                </div>
+                <div class="property-group">
+                    <label for="page-texture">Background Texture</label>
+                    <select id="page-texture">
+                        <option value="none">None</option>
+                        <option value="paper">Paper</option>
+                        <option value="craft">Craft Paper</option>
+                        <option value="cork">Cork</option>
+                        <option value="fabric">Fabric</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Sticker selection modal -->
+    <div id="sticker-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Select Stickers</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="sticker-categories">
+                    <button class="category-btn active" data-category="Fruits">Fruits</button>
+                    <button class="category-btn" data-category="Desserts">Desserts</button>
+                    <button class="category-btn" data-category="Meat">Meat</button>
+                    <button class="category-btn" data-category="Asian Cuisine">Asian Cuisine</button>
+                    <button class="category-btn" data-category="Baking">Baking</button>
+                    <button class="category-btn" data-category="Brunch">Brunch</button>
+                    <button class="category-btn" data-category="Cheese">Cheese</button>
+                    <button class="category-btn" data-category="Chinese Cuisine">Chinese Cuisine</button>
+                    <button class="category-btn" data-category="Convenience Food">Convenience Food</button>
+                    <button class="category-btn" data-category="Dips">Dips</button>
+                    <button class="category-btn" data-category="Drinks">Drinks</button>
+                    <button class="category-btn" data-category="Japanese Culture">Japanese Culture</button>
+                    <button class="category-btn" data-category="Snacks">Snacks</button>
+                    <button class="category-btn" data-category="Vegetables">Vegetables</button>
+                </div>
+                <div class="sticker-grid" id="sticker-grid-modal">
+                    <!-- Stickers will be loaded dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-close">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview modal -->
+    <div class="modal" id="preview-modal">
+        <div class="modal-content preview-modal-content">
+            <h2>Preview</h2>
+            <div class="preview-container">
+                <div id="preview-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save journal modal -->
+    <div class="modal" id="save-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h2>Save Journal</h2>
+                <button class="close-btn">&times;</button>
+                </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="journal-title">Journal Title</label>
+                    <input type="text" id="journal-title" placeholder="Enter journal title">
+                </div>
+                <p class="save-description">Your journal will be saved as an image and displayed on the "My Journals" page.</p>
+                <div id="save-preview" class="save-preview"></div>
+                    </div>
+            <div class="modal-footer">
+                    <button class="cancel-btn">Cancel</button>
+                <button class="confirm-btn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Page bottom, before closing body tag -->
+    <!-- Include modularized JavaScript files -->
+    <script src="js/sticker-config.js"></script>
+    <script src="js/editor-core.js"></script>
+    <script src="js/editor-elements.js"></script>
+    <script src="js/editor-stickers.js"></script>
+    <script src="js/editor-canvas.js"></script>
+    <script src="js/editor-properties.js"></script>
+    <script src="js/sticker-handler.js"></script>
+    <script src="js/upload-handler.js"></script>
+</body>
+</html> 

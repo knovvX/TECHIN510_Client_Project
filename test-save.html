@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保存测试</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .test-content {
+            width: 500px;
+            height: 400px;
+            border: 2px dashed #ccc;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            position: relative;
+        }
+        
+        .test-item {
+            position: absolute;
+            background-color: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            cursor: move;
+        }
+        
+        .test-item.note {
+            background-color: #ffff99;
+        }
+        
+        .test-item.image img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background-color: #4a6fdc;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+        }
+        
+        button:hover {
+            background-color: #3a5dc5;
+        }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        .save-result {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            width: 500px;
+            display: none;
+        }
+        
+        .preview {
+            max-width: 100%;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>保存功能测试</h1>
+    
+    <div class="controls">
+        <button onclick="addText()">添加文本</button>
+        <button onclick="addNote()">添加便签</button>
+        <button onclick="addImage()">添加图片</button>
+    </div>
+    
+    <div class="test-content" id="capture-area">
+        <div class="test-item note" style="top: 50px; left: 50px;">
+            这是一个测试便签
+        </div>
+        <div class="test-item" style="top: 150px; left: 200px;">
+            测试文本元素
+        </div>
+        <div class="test-item image" style="top: 250px; left: 100px;">
+            <img src="https://via.placeholder.com/150" alt="测试图片">
+        </div>
+    </div>
+    
+    <button onclick="saveContent()">保存内容</button>
+    
+    <div class="save-result" id="save-result">
+        <h3>保存结果</h3>
+        <div id="save-message"></div>
+        <img id="preview" class="preview">
+    </div>
+    
+    <script>
+        // 让元素可拖动
+        document.querySelectorAll('.test-item').forEach(makeElementDraggable);
+        
+        function makeElementDraggable(element) {
+            let isDragging = false;
+            let offsetX, offsetY;
+            
+            element.addEventListener('mousedown', function(e) {
+                isDragging = true;
+                offsetX = e.clientX - element.getBoundingClientRect().left;
+                offsetY = e.clientY - element.getBoundingClientRect().top;
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (isDragging) {
+                    const container = document.querySelector('.test-content');
+                    const containerRect = container.getBoundingClientRect();
+                    
+                    let newLeft = e.clientX - containerRect.left - offsetX;
+                    let newTop = e.clientY - containerRect.top - offsetY;
+                    
+                    // 边界检查
+                    if (newLeft < 0) newLeft = 0;
+                    if (newTop < 0) newTop = 0;
+                    if (newLeft + element.offsetWidth > container.offsetWidth) {
+                        newLeft = container.offsetWidth - element.offsetWidth;
+                    }
+                    if (newTop + element.offsetHeight > container.offsetHeight) {
+                        newTop = container.offsetHeight - element.offsetHeight;
+                    }
+                    
+                    element.style.left = newLeft + 'px';
+                    element.style.top = newTop + 'px';
+                }
+            });
+            
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+            });
+        }
+        
+        // 添加元素
+        function addText() {
+            const element = document.createElement('div');
+            element.className = 'test-item';
+            element.style.top = '100px';
+            element.style.left = '100px';
+            element.textContent = '新文本元素 - ' + new Date().toLocaleTimeString();
+            
+            document.getElementById('capture-area').appendChild(element);
+            makeElementDraggable(element);
+        }
+        
+        function addNote() {
+            const element = document.createElement('div');
+            element.className = 'test-item note';
+            element.style.top = '150px';
+            element.style.left = '150px';
+            element.textContent = '新便签 - ' + new Date().toLocaleTimeString();
+            
+            document.getElementById('capture-area').appendChild(element);
+            makeElementDraggable(element);
+        }
+        
+        function addImage() {
+            const element = document.createElement('div');
+            element.className = 'test-item image';
+            element.style.top = '200px';
+            element.style.left = '200px';
+            
+            const img = document.createElement('img');
+            img.src = 'https://via.placeholder.com/100?text=' + Math.floor(Math.random() * 100);
+            img.alt = '随机图片';
+            
+            element.appendChild(img);
+            document.getElementById('capture-area').appendChild(element);
+            makeElementDraggable(element);
+        }
+        
+        // 保存内容
+        function saveContent() {
+            const captureArea = document.getElementById('capture-area');
+            const resultArea = document.getElementById('save-result');
+            const message = document.getElementById('save-message');
+            const preview = document.getElementById('preview');
+            
+            resultArea.style.display = 'block';
+            message.textContent = '保存中...';
+            
+            html2canvas(captureArea, {
+                allowTaint: true,
+                useCORS: true
+            }).then(function(canvas) {
+                const imgData = canvas.toDataURL('image/png');
+                preview.src = imgData;
+                
+                // 保存到localStorage
+                const journalData = {
+                    id: 'test_' + new Date().getTime(),
+                    title: '测试保存 - ' + new Date().toLocaleString(),
+                    date: new Date().toISOString(),
+                    imageData: imgData,
+                    created: new Date().getTime()
+                };
+                
+                // 获取现有日记列表
+                let journals = JSON.parse(localStorage.getItem('journals') || '[]');
+                journals.push(journalData);
+                
+                // 保存回localStorage
+                try {
+                    localStorage.setItem('journals', JSON.stringify(journals));
+                    message.textContent = '保存成功! 日记ID: ' + journalData.id;
+                    
+                    // 添加链接到日记页面
+                    const link = document.createElement('div');
+                    link.innerHTML = '<a href="journal.html" target="_blank">点击查看所有日记</a>';
+                    message.appendChild(link);
+                } catch (error) {
+                    message.textContent = '保存失败: ' + error.message;
+                    console.error('保存失败:', error);
+                }
+            }).catch(function(error) {
+                message.textContent = '截图失败: ' + error.message;
+                console.error('截图失败:', error);
+            });
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,37 @@
+# 依赖目录
+node_modules/
+figma-mcp-proxy/
+
+# Figma相关文件
+**/figma-*.*
+**/figma_*.*
+**/*.fig
+.figma/
+figma/
+figma_exports/
+figma_assets/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 编辑器文件
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# 日志
+*.log
+log_update.txt
+
+# 临时文件
+*.tmp 
+
+# 图片文件（如果太大）
+# images/**/*.jpg
+# images/**/*.png
+# images/**/*.gif
+
+# 忽略venv目录
+venv/

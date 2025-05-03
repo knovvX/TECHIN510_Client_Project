@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Journals - Frame Flow</title>
+    <link rel="stylesheet" href="reading-journal.css">
+    <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Durer';
+            src: local('Times New Roman'), local('Georgia'), serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-transition"></div>
+    <div class="container">
+        <a href="index.html" class="back-home page-transition-link">Back to Home</a>
+        <h1 class="reading-stats-title">My Journals</h1>
+        
+        <!-- Journal Stats Section -->
+        <section class="reading-goal">
+            <h2>2024 Journal Activity</h2>
+            <div class="goal-container">
+                <!-- 40 boxes for journal activity -->
+                <div class="goal-counter completed"><span>1</span></div>
+                <div class="goal-counter completed"><span>2</span></div>
+                <div class="goal-counter completed"><span>3</span></div>
+                <div class="goal-counter completed"><span>4</span></div>
+                <div class="goal-counter completed"><span>5</span></div>
+                <div class="goal-counter completed"><span>6</span></div>
+                <div class="goal-counter completed"><span>7</span></div>
+                <div class="goal-counter completed"><span>8</span></div>
+                <div class="goal-counter"><span>9</span></div>
+                <div class="goal-counter"><span>10</span></div>
+                <div class="goal-counter"><span>11</span></div>
+                <div class="goal-counter"><span>12</span></div>
+                <div class="goal-counter"><span>13</span></div>
+                <div class="goal-counter"><span>14</span></div>
+                <div class="goal-counter"><span>15</span></div>
+                <div class="goal-counter"><span>16</span></div>
+                <div class="goal-counter"><span>17</span></div>
+                <div class="goal-counter"><span>18</span></div>
+                <div class="goal-counter"><span>19</span></div>
+                <div class="goal-counter"><span>20</span></div>
+                <div class="goal-counter"><span>21</span></div>
+                <div class="goal-counter"><span>22</span></div>
+                <div class="goal-counter"><span>23</span></div>
+                <div class="goal-counter"><span>24</span></div>
+                <div class="goal-counter"><span>25</span></div>
+                <div class="goal-counter"><span>26</span></div>
+                <div class="goal-counter"><span>27</span></div>
+                <div class="goal-counter"><span>28</span></div>
+                <div class="goal-counter"><span>29</span></div>
+                <div class="goal-counter"><span>30</span></div>
+                <div class="goal-counter"><span>31</span></div>
+                <div class="goal-counter"><span>32</span></div>
+                <div class="goal-counter"><span>33</span></div>
+                <div class="goal-counter"><span>34</span></div>
+                <div class="goal-counter"><span>35</span></div>
+                <div class="goal-counter"><span>36</span></div>
+                <div class="goal-counter"><span>37</span></div>
+                <div class="goal-counter"><span>38</span></div>
+                <div class="goal-counter"><span>39</span></div>
+                <div class="goal-counter"><span>40</span></div>
+            </div>
+        </section>
+        
+        <!-- Monthly Activity Section -->
+        <section class="monthly-reading">
+            <h2>Monthly Activity</h2>
+            <div class="months-container">
+                <div class="month">
+                    <div class="month-circle completed">
+                        <span class="month-name">Jan</span>
+                        <span class="book-count">3</span>
+                    </div>
+                </div>
+                <div class="month">
+                    <div class="month-circle completed">
+                        <span class="month-name">Feb</span>
+                        <span class="book-count">5</span>
+                    </div>
+                </div>
+                <div class="month">
+                    <div class="month-circle">
+                        <span class="month-name">Mar</span>
+                        <span class="book-count">0</span>
+                    </div>
+                </div>
+                <div class="month">
+                    <div class="month-circle">
+                        <span class="month-name">Apr</span>
+                        <span class="book-count">0</span>
+                    </div>
+                </div>
+                <div class="month">
+                    <div class="month-circle">
+                        <span class="month-name">May</span>
+                        <span class="book-count">0</span>
+                    </div>
+                </div>
+                <div class="month">
+                    <div class="month-circle">
+                        <span class="month-name">Jun</span>
+                        <span class="book-count">0</span>
+                    </div>
+                </div>
+                <div class="month">
+                    <div class="month-circle">
+                        <span class="month-name">Jul</span>
+                        <span class="book-count">0</span>
+                    </div>
+                </div>
+                <div class="month">
+                    <div class="month-circle">
+                        <span class="month-name">Aug</span>
+                        <span class="book-count">0</span>
+                    </div>
+                </div>
+                <div class="month">
+                    <div class="month-circle">
+                        <span class="month-name">Sep</span>
+                        <span class="book-count">0</span>
+                    </div>
+                </div>
+                <div class="month">
+                    <div class="month-circle">
+                        <span class="month-name">Oct</span>
+                        <span class="book-count">0</span>
+                    </div>
+                </div>
+                <div class="month">
+                    <div class="month-circle">
+                        <span class="month-name">Nov</span>
+                        <span class="book-count">0</span>
+                    </div>
+                </div>
+                <div class="month">
+                    <div class="month-circle">
+                        <span class="month-name">Dec</span>
+                        <span class="book-count">0</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- My Journals Section -->
+        <section class="upcoming-books">
+            <h2>My Journals</h2>
+            <div class="upcoming-container" id="journal-preview-container">
+                <!-- 预览会从IndexedDB中加载 -->
+                <a href="editor.html" class="book-item new-journal page-transition-link">
+                    <div class="book-cover new-cover">
+                        <span class="add-icon">+</span>
+                    </div>
+                    <div class="book-info">
+                        <h3>Create New Journal</h3>
+                        <p>Start a fresh canvas</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+        
+        <!-- Tags Section -->
+        <section class="books-to-read">
+            <h2>Journal Tags</h2>
+            <div class="book-list">
+                <div class="book-category">
+                    <h3>Themes</h3>
+                    <ul>
+                        <li>Travel (3)</li>
+                        <li>Books (5)</li>
+                        <li>Productivity (2)</li>
+                        <li>Photography (7)</li>
+                        <li>Recipes (4)</li>
+                    </ul>
+                </div>
+                <div class="book-category">
+                    <h3>Media Types</h3>
+                    <ul>
+                        <li>Photos (15)</li>
+                        <li>Videos (4)</li>
+                        <li>Audio (2)</li>
+                        <li>Sketches (6)</li>
+                        <li>Text (8)</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // 页面过渡效果
+        document.addEventListener('DOMContentLoaded', () => {
+            const transitionLinks = document.querySelectorAll('.page-transition-link');
+            const pageTransition = document.querySelector('.page-transition');
+            
+            transitionLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = e.currentTarget.getAttribute('href');
+                    
+                    // Store the journal ID if it exists
+                    if (link.dataset.journalId) {
+                        localStorage.setItem('currentJournalId', link.dataset.journalId);
+                    }
+                    
+                    // 激活过渡效果
+                    pageTransition.classList.add('active');
+                    
+                    // 等待过渡完成后导航到新页面
+                    setTimeout(() => {
+                        window.location.href = target;
+                    }, 500);
+                });
+            });
+            
+            // Load journals from IndexedDB
+            loadJournalPreviews();
+        });
+        
+        // Load journal previews from IndexedDB
+        function loadJournalPreviews() {
+            // Open the database
+            const request = indexedDB.open('ScrapbookDB', 1);
+            
+            request.onerror = function(event) {
+                console.error('Database error:', event.target.error);
+            };
+            
+            request.onsuccess = function(event) {
+                const db = event.target.result;
+                
+                // Get all journals
+                const transaction = db.transaction(['scrapbooks'], 'readonly');
+                const store = transaction.objectStore('scrapbooks');
+                const journals = [];
+                
+                // Use a cursor to iterate through all journals
+                const cursorRequest = store.openCursor();
+                
+                cursorRequest.onsuccess = function(event) {
+                    const cursor = event.target.result;
+                    if (cursor) {
+                        journals.push(cursor.value);
+                        cursor.continue();
+                    } else {
+                        // All journals have been collected
+                        displayJournalPreviews(journals);
+                    }
+                };
+                
+                cursorRequest.onerror = function(event) {
+                    console.error('Error loading journals:', event.target.error);
+                };
+            };
+        }
+        
+        // Display journal previews
+        function displayJournalPreviews(journals) {
+            const container = document.getElementById('journal-preview-container');
+            
+            // Sort journals by date (newest first)
+            journals.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            // Display up to 5 most recent journals
+            const recentJournals = journals.slice(0, 5);
+            
+            recentJournals.forEach(journal => {
+                // Create preview element
+                const previewElement = document.createElement('a');
+                previewElement.className = 'book-item page-transition-link';
+                previewElement.href = 'editor.html';
+                previewElement.dataset.journalId = journal.id;
+                
+                // Create preview thumbnail (showing background color at minimum)
+                const coverElement = document.createElement('div');
+                coverElement.className = 'book-cover';
+                coverElement.style.backgroundColor = journal.backgroundColor || '#f5f5f5';
+                
+                // If we have content with images, we could create a mini-preview here
+                // This would be more complex and might require creating a small canvas
+                
+                // Create info section
+                const infoElement = document.createElement('div');
+                infoElement.className = 'book-info';
+                
+                // Format date for display
+                const journalDate = new Date(journal.date);
+                const formattedDate = journalDate.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                // Set journal title and date
+                const titleElement = document.createElement('h3');
+                titleElement.textContent = `Journal ${journal.id}`;
+                
+                const dateElement = document.createElement('p');
+                dateElement.textContent = formattedDate;
+                
+                // Assemble the preview
+                infoElement.appendChild(titleElement);
+                infoElement.appendChild(dateElement);
+                previewElement.appendChild(coverElement);
+                previewElement.appendChild(infoElement);
+                
+                // Insert after the "Create New" button
+                const newJournalElement = container.querySelector('.new-journal');
+                container.insertBefore(previewElement, newJournalElement.nextSibling);
+            });
+        }
+    </script>
+</body>
+</html> 

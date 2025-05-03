@@ -1,0 +1,645 @@
+:root {
+    --background-color: #F5F3F0;
+    --text-color: #1F1B14;
+    --accent-color: #AD9D85;
+    --border-color: #AD9D85;
+    --white: #FFFFFF;
+    --light-accent: #E0DAD1;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Overpass', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    animation: fadeIn 0.8s ease-in forwards;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.book-review {
+    background-color: var(--white);
+    border: 0.6px solid var(--border-color);
+    border-radius: 9.57px;
+    padding: 30px;
+    box-shadow: 0 4.78px 23.92px rgba(0, 0, 0, 0.25);
+    animation: fadeUp 0.8s ease-out forwards;
+    animation-delay: 0.3s;
+    opacity: 0;
+}
+
+@keyframes fadeUp {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.book-header {
+    margin-bottom: 30px;
+}
+
+.book-title {
+    font-family: 'Durer', serif;
+    font-size: 52.62px;
+    font-weight: 400;
+    margin: 0 0 10px 0;
+    line-height: 1.2;
+}
+
+.book-author {
+    font-size: 19.13px;
+    font-weight: 275;
+    color: var(--accent-color);
+    margin: 0 0 20px 0;
+}
+
+.book-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.meta-item {
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease;
+}
+
+.meta-item:hover {
+    transform: translateY(-5px);
+}
+
+.meta-label {
+    font-size: 9.57px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    margin-bottom: 5px;
+}
+
+.meta-value {
+    font-size: 11.96px;
+    font-weight: 700;
+}
+
+.rating-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.rating-category {
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.rating-category:hover {
+    transform: translateY(-5px);
+    background-color: var(--light-accent);
+}
+
+.category-label {
+    font-size: 9.57px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    margin-bottom: 10px;
+}
+
+.stars {
+    color: var(--text-color);
+    font-size: 20px;
+}
+
+.content-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.content-block {
+    margin-bottom: 20px;
+    transition: transform 0.3s ease;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.content-block:hover {
+    transform: translateY(-5px);
+    background-color: var(--light-accent);
+}
+
+.content-block h3 {
+    font-size: 9.57px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+    margin: 0 0 10px 0;
+}
+
+.content-block p {
+    font-size: 11.96px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.quote {
+    font-style: italic;
+    position: relative;
+}
+
+.quote::before, .quote::after {
+    content: '"';
+    color: var(--accent-color);
+    opacity: 0.5;
+}
+
+/* Home page styles */
+.overlay-container {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.cover-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+}
+
+.title-background {
+    background-color: var(--text-color);
+    width: 100%;
+    padding: 40px;
+    margin-bottom: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 12px;
+    animation: slideDown 0.8s ease-out forwards;
+    animation-delay: 0.2s;
+    opacity: 0;
+    transform: translateY(-30px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+}
+
+.title-background:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+@keyframes slideDown {
+    0% { opacity: 0; transform: translateY(-30px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.main-title {
+    font-family: 'Overpass', sans-serif;
+    font-size: 158px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--white);
+    line-height: 1;
+    text-align: center;
+}
+
+.tagline {
+    font-size: 30px;
+    font-weight: 300;
+    color: var(--light-accent);
+    margin: 20px 0 0;
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.cards-container {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 40px;
+    perspective: 1000px;
+    opacity: 0;
+    animation: cardAppear 0.8s ease-out forwards;
+    animation-delay: 0.6s;
+}
+
+@keyframes cardAppear {
+    0% { opacity: 0; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.card {
+    background-color: var(--white);
+    border: 0.6px solid var(--border-color);
+    border-radius: 9.57px;
+    flex: 1;
+    min-width: 300px;
+    transform: rotate(-5deg);
+    box-shadow: 0 4.78px 23.92px rgba(0, 0, 0, 0.25);
+    overflow: hidden;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.5s ease;
+}
+
+.card:hover {
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.card-left {
+    transform: rotate(-5deg);
+}
+
+.card-left:hover {
+    transform: rotate(-3deg) translateY(-10px);
+}
+
+.card-right {
+    transform: rotate(2deg);
+    z-index: 2;
+}
+
+.card-right:hover {
+    transform: rotate(0deg) translateY(-10px);
+}
+
+.card-content {
+    padding: 30px;
+}
+
+.card-label {
+    font-size: 14.35px;
+    font-weight: 400;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.card-title {
+    font-family: 'Durer', serif;
+    font-size: 52.62px;
+    font-weight: 400;
+    margin: 0 0 10px 0;
+    line-height: 1.2;
+}
+
+.card-author {
+    font-size: 19.13px;
+    font-weight: 275;
+    color: var(--accent-color);
+    margin: 0 0 20px 0;
+}
+
+.preview-content {
+    margin-top: 30px;
+}
+
+.preview-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    transition: transform 0.3s ease;
+}
+
+.preview-item:hover {
+    transform: translateX(5px);
+}
+
+.preview-label {
+    font-size: 9.57px;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+}
+
+.preview-rating {
+    font-size: 16px;
+}
+
+.buttons-container {
+    margin-top: 20px;
+    display: flex;
+    gap: 20px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease-out forwards;
+    animation-delay: 0.9s;
+}
+
+.start-button {
+    display: inline-block;
+    background-color: var(--text-color);
+    color: var(--white);
+    padding: 20px 40px;
+    border-radius: 12.16px;
+    text-decoration: none;
+    font-size: 24px;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.start-button:hover {
+    background-color: var(--accent-color);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}
+
+.start-button:active {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+}
+
+.reading-stats-button {
+    background-color: var(--accent-color);
+}
+
+.reading-stats-button:hover {
+    background-color: var(--text-color);
+}
+
+/* 页面过渡效果 */
+.page-transition {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-color);
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.page-transition.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .main-title {
+        font-size: 120px;
+    }
+    
+    .tagline {
+        font-size: 24px;
+    }
+    
+    .card-title {
+        font-size: 42px;
+    }
+}
+
+@media (max-width: 768px) {
+    .book-title {
+        font-size: 40px;
+    }
+    
+    .book-meta {
+        grid-template-columns: 1fr;
+    }
+    
+    .rating-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .content-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .title-background {
+        padding: 30px;
+    }
+    
+    .main-title {
+        font-size: 80px;
+    }
+    
+    .tagline {
+        font-size: 20px;
+    }
+    
+    .cards-container {
+        flex-direction: column;
+    }
+    
+    .card {
+        transform: none;
+        margin-bottom: 20px;
+    }
+    
+    .card-right {
+        transform: none;
+    }
+    
+    .start-button {
+        font-size: 18px;
+        padding: 15px 30px;
+    }
+    
+    .buttons-container {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-title {
+        font-size: 60px;
+    }
+    
+    .tagline {
+        font-size: 16px;
+    }
+    
+    .card-title {
+        font-size: 32px;
+    }
+    
+    .start-button {
+        font-size: 16px;
+        padding: 12px 24px;
+    }
+}
+
+/* Journal Grid 样式改进 */
+.journal-card {
+    position: relative;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    height: 280px;
+    margin-bottom: 20px;
+}
+
+.journal-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+}
+
+.journal-cover {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    background-color: #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.journal-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-height: 100%;
+}
+
+.journal-info {
+    padding: 12px;
+    background-color: #fff;
+    border-top: 1px solid #eee;
+}
+
+.journal-title {
+    font-weight: 600;
+    margin: 0 0 5px 0;
+    font-size: 16px;
+}
+
+.journal-date {
+    color: #888;
+    font-size: 12px;
+    margin: 0;
+}
+
+/* 悬停操作选项 */
+.journal-actions {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 8px;
+    display: flex;
+    justify-content: space-between;
+    opacity: 0;
+    transition: opacity 0.2s;
+    background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%);
+    height: 40px;
+    padding-top: 20px;
+}
+
+.journal-card:hover .journal-actions {
+    opacity: 1;
+}
+
+.action-btn {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.85);
+    border-radius: 50%;
+    cursor: pointer;
+    color: #333;
+    border: none;
+    transition: background-color 0.2s, transform 0.2s, color 0.2s;
+}
+
+.action-btn:hover {
+    background-color: #fff;
+    transform: scale(1.1);
+}
+
+.star-btn {
+    color: #666;
+}
+
+.star-btn.active {
+    color: #ffc107;
+}
+
+.delete-btn {
+    color: #666;
+}
+
+.delete-btn:hover {
+    color: #dc3545;
+}
+
+/* 创建新日记卡片样式 */
+.create-journal-card {
+    border: 2px dashed #ccc;
+    background-color: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+    cursor: pointer;
+    transition: background-color 0.2s, border-color 0.2s;
+    height: 280px;
+}
+
+.create-journal-card:hover {
+    background-color: #f0f0f0;
+    border-color: #999;
+}
+
+.create-journal-card .plus-icon {
+    font-size: 48px;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.create-journal-card .create-text {
+    font-weight: 500;
+    color: #555;
+    margin: 0;
+}
+
+.create-journal-card .subtitle {
+    color: #999;
+    font-size: 14px;
+    margin: 5px 0 0 0;
+}
+
+/* 日志网格布局 */
+.journals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+    padding: 20px 0;
+} 

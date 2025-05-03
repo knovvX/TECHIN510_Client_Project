@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Flow</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Durer';
+            src: local('Times New Roman'), local('Georgia'), serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-transition"></div>
+    <div class="overlay-container">
+        <div class="cover-container">
+            <div class="title-background">
+                <h1 class="main-title">Frame Flow</h1>
+                <p class="tagline">Capture your life through multimedia journaling</p>
+            </div>
+            <div class="cards-container">
+                <div class="card card-left">
+                    <div class="card-content">
+                        <span class="card-label">JOURNAL SAMPLE</span>
+                        <h3 class="card-title">Travel Memories</h3>
+                        <p class="card-author">Summer Trip · Tokyo, Japan</p>
+                    </div>
+                </div>
+                <div class="card card-right">
+                    <div class="card-content">
+                        <span class="card-label">JOURNAL SAMPLE</span>
+                        <h3 class="card-title">Reading Notes</h3>
+                        <p class="card-author">Martha Wells · The Murderbot Diaries #1</p>
+                        <div class="preview-content">
+                            <div class="preview-item">
+                                <span class="preview-label">Content</span>
+                                <span class="preview-rating">★★★★☆</span>
+                            </div>
+                            <div class="preview-item">
+                                <span class="preview-label">Layout</span>
+                                <span class="preview-rating">★★★★☆</span>
+                            </div>
+                            <div class="preview-item">
+                                <span class="preview-label">Media</span>
+                                <span class="preview-rating">★★★★★</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="buttons-container">
+                <a href="editor.html?new=true" class="start-button page-transition-link">Start New Journal</a>
+                <a href="journal.html" class="start-button reading-stats-button page-transition-link">My Journals</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Page transition effect
+        document.addEventListener('DOMContentLoaded', () => {
+            const transitionLinks = document.querySelectorAll('.page-transition-link');
+            const pageTransition = document.querySelector('.page-transition');
+            
+            transitionLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = e.currentTarget.getAttribute('href');
+                    
+                    // Activate transition effect
+                    pageTransition.classList.add('active');
+                    
+                    // Wait for transition to complete before navigating to new page
+                    setTimeout(() => {
+                        window.location.href = target;
+                    }, 500);
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

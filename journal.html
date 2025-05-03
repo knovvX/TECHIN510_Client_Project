@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Flow - My Journals</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- 引入工具类 -->
+    <script src="js/local-storage-manager.js"></script>
+    <script src="js/file-system-access.js"></script>
+    
+    <!-- 简单直接的查看日记功能 -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Loading journals page...');
+        
+        // Debug: Check localStorage for journals
+        const journals = LocalStorageManager.getAllJournals();
+        console.log('Found journals in storage:', journals.length);
+        
+        try {
+            if (journals.length > 0) {
+                console.log('First journal details:', {
+                    id: journals[0].id,
+                    title: journals[0].title,
+                    date: journals[0].date,
+                    hasImageUrl: !!journals[0].imageUrl,
+                    hasImageData: !!journals[0].imageData,
+                    hasImageFilename: !!journals[0].imageFilename,
+                    imageLength: journals[0].imageUrl ? journals[0].imageUrl.length : 
+                               (journals[0].imageData ? journals[0].imageData.length : 0),
+                    saveMethod: journals[0].saveMethod || 'unknown'
+                });
+            }
+        } catch (e) {
+            console.error('Error checking journal details:', e);
+        }
+        
+        displayJournals();
+        
+        // Set up delete button events
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-btn')) {
+                const deleteBtn = e.target.closest('.delete-btn');
+                const journalCard = deleteBtn.closest('.journal-card');
+                const journalId = journalCard.getAttribute('data-id');
+                
+                if (confirm('确定要删除这个日记吗？此操作无法撤消。')) {
+                    // 使用存储管理器删除
+                    const result = LocalStorageManager.deleteJournal(journalId);
+                    
+                    if (result) {
+                        // Remove card with animation
+                        journalCard.style.opacity = '0';
+                        journalCard.style.transform = 'scale(0.8)';
+                        setTimeout(function() {
+                            journalCard.remove();
+                            
+                            // Check if there are any journals left
+                            if (document.querySelectorAll('.journal-card').length <= 1) {
+                                displayJournals(); // Only create card left, show empty state
+                            }
+                        }, 300);
+                    } else {
+                        alert('删除失败，请重试');
+                    }
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+        
+        // Set up card click events - open editor
+        document.addEventListener('click', function(e) {
+            const journalCard = e.target.closest('.journal-card');
+            if (journalCard && !journalCard.classList.contains('create-journal-card') && 
+                !e.target.closest('.action-btn')) {
+                const journalId = journalCard.getAttribute('data-id');
+                window.location.href = 'editor.html?id=' + journalId;
+            }
+        });
+    });
+    
+    // Display all journals
+    function displayJournals() {
+        console.log('Displaying journal list...');
+        const container = document.querySelector('.journals-grid');
+        if (!container) {
+            console.error('Journal container not found');
+            return;
+        }
+        
+        // Preserve create card
+        let createCard = container.querySelector('.create-journal-card');
+        if (!createCard) {
+            createCard = document.createElement('a');
+            createCard.href = 'editor.html?new=true';
+            createCard.className = 'create-journal-card';
+            createCard.innerHTML = `
+                <div class="create-icon">+</div>
+                <div class="create-text">Create New Journal</div>
+                <div class="create-subtext">Start with a blank canvas</div>
+            `;
+        }
+        
+        // Clear container
+        container.innerHTML = '';
+        container.appendChild(createCard);
+        
+        // Get journals from localStorage
+        let journals = [];
+        try {
+            journals = JSON.parse(localStorage.getItem('journals') || '[]');
+            console.log('Found', journals.length, 'journals in localStorage');
+            
+            // 检查localStorage中是否有最新保存的日记
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromSave = urlParams.get('fromSave');
+            if (fromSave) {
+                console.log('Coming from save operation, displaying latest journal');
+                // 清除URL参数
+                window.history.replaceState({}, document.title, 'journal.html');
+            }
+        } catch (error) {
+            console.error('Error parsing journals from localStorage:', error);
+            journals = [];
+        }
+        
+        // Add sample journal cards if there are no saved journals
+        let displayedJournals = journals;
+        
+        if (journals.length === 0) {
+            // Create sample journal data
+            displayedJournals = [
+                {
+                    id: 'sample_1',
+                    title: 'Breakfast Journal',
+                    created: new Date(2025, 4, 15).getTime(),
+                    imageUrl: 'example/example(1).png'
+                },
+                {
+                    id: 'sample_2',
+                    title: 'Spring Trip',
+                    created: new Date(2025, 3, 23).getTime(),
+                    imageUrl: 'example/example(2).png'
+                }
+            ];
+            
+            // Show info message
+            const infoMessage = document.createElement('div');
+            infoMessage.className = 'info-message';
+            infoMessage.innerHTML = `
+                <div class="info-icon"><i class="fas fa-info-circle"></i></div>
+                <p>These are sample journals. After creating and saving your own journals, they will appear here.</p>
+            `;
+            infoMessage.style.gridColumn = '1 / -1';
+            infoMessage.style.padding = '10px 15px';
+            infoMessage.style.margin = '0 0 20px 0';
+            infoMessage.style.backgroundColor = '#e8f4ff';
+            infoMessage.style.borderRadius = '5px';
+            infoMessage.style.color = '#0066cc';
+            container.appendChild(infoMessage);
+        }
+        
+        // Set loading status
+        const loadingMessage = document.createElement('div');
+        loadingMessage.className = 'loading-message';
+        loadingMessage.textContent = 'Loading journal list...';
+        loadingMessage.style.textAlign = 'center';
+        loadingMessage.style.padding = '20px';
+        loadingMessage.style.gridColumn = '1 / -1';
+        container.appendChild(loadingMessage);
+        
+        // Use setTimeout to update UI
+        setTimeout(() => {
+            // Remove loading message
+            loadingMessage.remove();
+            
+            // Create journal cards
+            displayedJournals.forEach(journal => {
+                try {
+                    const card = document.createElement('div');
+                    card.className = 'journal-card';
+                    card.setAttribute('data-id', journal.id);
+                    
+                    // Format date
+                    const date = new Date(journal.created);
+                    const formattedDate = date.toLocaleDateString('zh-CN', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
+                    // Ensure image data
+                    let imgSrc = 'images/placeholder.jpg';
+                    if (journal.imageData) {
+                        // 优先使用imageData (base64数据)
+                        imgSrc = journal.imageData;
+                        console.log(`Journal ${journal.id}: Using embedded image data`);
+                    } else if (journal.imageUrl) {
+                        // 如果没有imageData，尝试使用imageUrl路径
+                        imgSrc = journal.imageUrl;
+                        console.log(`Journal ${journal.id}: Using image URL ${journal.imageUrl}`);
+                    } else {
+                        console.warn(`Journal ${journal.id}: No image data, using placeholder`);
+                    }
+                    
+                    // Check if sample journal
+                    const isSample = journal.id.startsWith('sample_');
+                    
+                    card.innerHTML = `
+                        <div class="journal-cover">
+                            <img src="${imgSrc}" alt="${journal.title}" 
+                                onerror="this.src='images/placeholder.jpg'; 
+                                console.error('Failed to load journal image for ${journal.id}');">
+                            ${isSample ? '<div class="sample-badge">Sample</div>' : ''}
+                        </div>
+                        <div class="journal-info">
+                            <h3 class="journal-title">${journal.title}</h3>
+                            <div class="journal-date">${formattedDate}</div>
+                        </div>
+                        <div class="journal-actions">
+                            <button class="action-btn edit-btn" data-id="${journal.id}"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete-btn" data-id="${journal.id}" ${isSample ? 'disabled' : ''}><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    
+                    // Add styles
+                    if (isSample) {
+                        card.style.opacity = "0.85";
+                    }
+                    
+                    container.appendChild(card);
+                    
+                    // Add card click event - open editor
+                    if (!isSample) {
+                        card.addEventListener('click', function(e) {
+                            // If not clicking a button, open editor
+                            if (!e.target.closest('.action-btn')) {
+                                window.location.href = 'editor.html?id=' + journal.id;
+                            }
+                        });
+                        
+                        // Add edit button event
+                        const editBtn = card.querySelector('.edit-btn');
+                        if (editBtn) {
+                            editBtn.addEventListener('click', function(e) {
+                                e.stopPropagation(); // Stop propagation
+                                window.location.href = 'editor.html?id=' + journal.id;
+                            });
+                        }
+                        
+                        // Add delete button event
+                        const deleteBtn = card.querySelector('.delete-btn');
+                        if (deleteBtn) {
+                            deleteBtn.addEventListener('click', function(e) {
+                                e.stopPropagation(); // Stop propagation
+                                
+                                if (confirm('确定要删除这个日记吗？此操作不可撤销。')) {
+                                    // 从localStorage中删除
+                                    let journals = JSON.parse(localStorage.getItem('journals') || '[]');
+                                    journals = journals.filter(j => j.id !== journal.id);
+                                    localStorage.setItem('journals', JSON.stringify(journals));
+                                    
+                                    // 从DOM中移除
+                                    card.remove();
+                                    console.log(`Deleted journal ${journal.id}`);
+                                    
+                                    // 如果没有日记了，重新加载页面显示示例
+                                    if (journals.length === 0) {
+                                        displayJournals();
+                                    }
+                                }
+                            });
+                        }
+                    } else {
+                        // Sample card click alert
+                        card.addEventListener('click', function(e) {
+                            if (!e.target.closest('.action-btn')) {
+                                alert('This is a sample journal. Please create and save your own journal.');
+                            }
+                        });
+                        
+                        // Sample card edit button
+                        const editBtn = card.querySelector('.edit-btn');
+                        if (editBtn) {
+                            editBtn.addEventListener('click', function(e) {
+                                e.stopPropagation(); // Stop propagation
+                                alert('This is a sample journal and cannot be edited. Please create a new journal.');
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error creating journal card:', error, journal);
+                }
+            });
+            
+            console.log('Journal display completed');
+        }, 100);
+    }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9f7f1;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #e1e1e1;
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: #4a6fdc;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a5dc5;
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .page-title {
+            font-size: 28px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .journals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 25px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .journal-card {
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 220px;
+            margin: 0 auto;
+        }
+        
+        .journal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .journal-cover {
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #f5f5f5;
+            /* 使用一个固定的容器，而不是padding-top */
+            height: 0;
+            padding-top: 75%; /* 保持4:3比例 */
+        }
+        
+        .journal-cover img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* 改回contain确保图片完整显示 */
+            padding: 8px; /* 添加内边距让图片不贴边 */
+        }
+        
+        .journal-info {
+            padding: 15px;
+            flex-grow: 1;
+            border-top: 1px solid #eee; /* 添加分隔线 */
+            background-color: #fff; /* 确保标题背景为白色 */
+        }
+        
+        .journal-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 5px 0;
+            /* 添加文本溢出省略号 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .journal-date {
+            color: #888;
+            font-size: 12px;
+        }
+        
+        .journal-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .journal-card:hover .journal-actions {
+            opacity: 1;
+        }
+        
+        .action-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: none;
+            cursor: pointer;
+            color: #555;
+            transition: all 0.3s ease;
+            font-size: 12px;
+        }
+        
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .edit-btn:hover {
+            color: #4a6fdc;
+        }
+        
+        .delete-btn:hover {
+            color: #e74c3c;
+        }
+        
+        .star-btn:hover {
+            color: #f1c40f;
+        }
+        
+        .create-journal-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 200px;
+            background-color: #f9f9f9;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 220px;
+            margin: 0 auto;
+        }
+        
+        .create-journal-card:hover {
+            background-color: #f0f0f0;
+            border-color: #4a6fdc;
+            transform: translateY(-5px);
+        }
+        
+        .create-icon {
+            font-size: 40px;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+        
+        .create-text {
+            font-size: 16px;
+            color: #888;
+            text-align: center;
+            padding: 0 10px;
+        }
+        
+        .create-subtext {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 5px;
+            text-align: center;
+        }
+        
+        /* Empty state styles */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        
+        .empty-icon {
+            font-size: 60px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .empty-title {
+            font-size: 22px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        
+        .empty-text {
+            color: #888;
+            margin-bottom: 30px;
+        }
+        
+        /* 样式更新：为"Sample"标签添加样式 */
+        .sample-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255,0,0,0.7);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <a href="index.html" class="logo">Frame Flow</a>
+            <div class="nav-buttons">
+                <a href="editor.html?new=true" class="btn btn-primary">Create New Journal</a>
+                <a href="index.html" class="btn btn-secondary">Back to Home</a>
+            </div>
+        </header>
+        
+        <h1 class="page-title">My Journals</h1>
+        
+        <div class="journals-grid">
+            <!-- Create new journal card -->
+            <a href="editor.html?new=true" class="create-journal-card">
+                <div class="create-icon">+</div>
+                <div class="create-text">Create New Journal</div>
+                <div class="create-subtext">Start with a blank canvas</div>
+            </a>
+            
+            <!-- Sample journal cards -->
+            <div class="journal-card" data-id="1">
+                <div class="journal-cover">
+                    <img src="images/placeholder.jpg" alt="Journal Cover">
+                </div>
+                <div class="journal-info">
+                    <h3 class="journal-title">Tokyo Trip</h3>
+                    <div class="journal-date">May 2, 2025</div>
+                </div>
+                <div class="journal-actions">
+                    <button class="action-btn star-btn"><i class="fas fa-star"></i></button>
+                    <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+
+            <div class="journal-card" data-id="2">
+                <div class="journal-cover">
+                    <img src="images/placeholder.jpg" alt="Journal Cover">
+                </div>
+                <div class="journal-info">
+                    <h3 class="journal-title">Weekend Baking</h3>
+                    <div class="journal-date">April 20, 2025</div>
+                </div>
+                <div class="journal-actions">
+                    <button class="action-btn star-btn"><i class="fas fa-star"></i></button>
+                    <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+
+            <div class="journal-card" data-id="3">
+                <div class="journal-cover">
+                    <img src="images/placeholder.jpg" alt="Journal Cover">
+                </div>
+                <div class="journal-info">
+                    <h3 class="journal-title">Summer Picnic</h3>
+                    <div class="journal-date">April 15, 2025</div>
+                </div>
+                <div class="journal-actions">
+                    <button class="action-btn star-btn"><i class="fas fa-star"></i></button>
+                    <button class="action-btn delete-btn"><i class="fas fa-trash"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html> 

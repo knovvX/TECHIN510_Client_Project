@@ -1,0 +1,430 @@
+:root {
+    --background-color: #D6CEC2;
+    --section-bg-color: #F5F3F0;
+    --text-color: #1F1B14;
+    --accent-color: #AD9D85;
+    --border-color: #AD9D85;
+    --white: #FFFFFF;
+    --light-accent: #E0DAD1;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: 'Overpass', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    padding: 40px;
+    opacity: 0;
+    animation: fadeIn 0.8s ease-in forwards;
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(20px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+section {
+    background-color: var(--section-bg-color);
+    border-radius: 16px;
+    padding: 40px;
+    position: relative;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+    opacity: 0;
+    animation: sectionAppear 0.8s ease-out forwards;
+    animation-delay: calc(var(--section-delay) * 0.2s);
+}
+
+section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+
+.reading-goal { --section-delay: 1; }
+.monthly-reading { --section-delay: 2; }
+.upcoming-books { --section-delay: 3; }
+.books-to-read { --section-delay: 4; }
+
+@keyframes sectionAppear {
+    0% { opacity: 0; transform: translateY(30px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+h1, h2 {
+    font-weight: 400;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.reading-stats-title {
+    font-size: 64px;
+    margin: 20px 0 10px;
+}
+
+h2 {
+    font-size: 36px;
+}
+
+/* 阅读目标部分样式 */
+.goal-container {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 15px;
+}
+
+.goal-counter {
+    background-color: var(--white);
+    width: 100%;
+    aspect-ratio: 1/1;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: 300;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.goal-counter.completed {
+    background-color: var(--accent-color);
+    color: var(--white);
+}
+
+.goal-counter:hover {
+    transform: scale(1.05);
+    cursor: pointer;
+}
+
+/* 每月阅读部分样式 */
+.months-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+}
+
+.month {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.month:hover {
+    transform: translateY(-5px);
+}
+
+.month-circle {
+    width: 80px;
+    height: 80px;
+    background-color: var(--white);
+    border-radius: 50%;
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.month-circle.completed {
+    background-color: var(--accent-color);
+    color: var(--white);
+}
+
+.month:hover .month-circle {
+    transform: scale(1.1);
+}
+
+.month-name {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.book-count {
+    font-size: 22px;
+    font-weight: 300;
+}
+
+/* 即将阅读部分样式 */
+.upcoming-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+.book-item {
+    text-decoration: none;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background-color: var(--white);
+    border-radius: 12px;
+    overflow: hidden;
+    padding-bottom: 15px;
+}
+
+.book-item:hover {
+    transform: translateY(-10px) scale(1.03);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+.book-cover {
+    width: 100%;
+    height: 280px;
+    background-color: var(--light-accent);
+    margin-bottom: 15px;
+    background-size: cover;
+    background-position: center;
+}
+
+.book-cover.sample1 {
+    background-image: url('https://m.media-amazon.com/images/I/91dSMhdIzTL._AC_UF1000,1000_QL80_.jpg');
+}
+
+.book-cover.sample2 {
+    background-image: url('https://m.media-amazon.com/images/I/61+t8dh4BEL._AC_UF1000,1000_QL80_.jpg');
+}
+
+.book-cover.sample3 {
+    background-image: url('https://m.media-amazon.com/images/I/81EkO9Er7BL._AC_UF1000,1000_QL80_.jpg');
+}
+
+.book-info {
+    text-align: center;
+    padding: 0 15px;
+}
+
+.book-info h3 {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.book-info p {
+    font-size: 16px;
+    font-weight: 300;
+    color: #666;
+}
+
+/* 待读书籍部分样式 */
+.book-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+}
+
+.book-category h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    position: relative;
+    display: inline-block;
+}
+
+.book-category h3::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -5px;
+    left: 0;
+    background-color: var(--accent-color);
+    transition: width 0.4s ease;
+}
+
+.book-category:hover h3::after {
+    width: 100%;
+}
+
+.book-category ul {
+    list-style: none;
+}
+
+.book-category li {
+    padding: 8px 0;
+    font-size: 18px;
+    position: relative;
+    padding-left: 20px;
+    transition: transform 0.3s ease;
+}
+
+.book-category li:hover {
+    transform: translateX(5px);
+    color: var(--accent-color);
+}
+
+.book-category li::before {
+    content: "•";
+    position: absolute;
+    left: 0;
+    color: var(--accent-color);
+    font-size: 24px;
+    line-height: 20px;
+}
+
+/* 返回首页按钮 */
+.back-home {
+    align-self: flex-start;
+    background-color: var(--text-color);
+    color: var(--white);
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 100;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.back-home:hover {
+    background-color: var(--accent-color);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+}
+
+.back-home:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* 页面过渡效果 */
+.page-transition {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: var(--background-color);
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.page-transition.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .container {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 992px) {
+    .upcoming-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        padding: 20px;
+    }
+    
+    section {
+        padding: 30px;
+    }
+    
+    .reading-stats-title {
+        font-size: 48px;
+    }
+    
+    h2 {
+        font-size: 28px;
+        margin-bottom: 20px;
+    }
+    
+    .goal-container {
+        grid-template-columns: repeat(5, 1fr);
+    }
+    
+    .months-container {
+        grid-template-columns: repeat(3, 1fr);
+    }
+    
+    .book-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 576px) {
+    .goal-container {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .months-container {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .upcoming-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .book-cover {
+        height: 220px;
+    }
+}
+
+/* New journal button styles */
+.new-cover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f0f0f0;
+    background-image: linear-gradient(45deg, #f5f5f5, #e0e0e0);
+    border: 2px dashed #ccc;
+    transition: all 0.3s ease;
+}
+
+.new-cover:hover {
+    background-image: linear-gradient(45deg, #e8f5e9, #c8e6c9);
+    border-color: #81c784;
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.add-icon {
+    font-size: 32px;
+    color: #757575;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.new-cover:hover .add-icon {
+    color: #43a047;
+    transform: scale(1.2);
+}
+
+/* Journal preview styles */
+.book-item {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.book-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+} 
