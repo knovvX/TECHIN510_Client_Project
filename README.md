@@ -29,6 +29,7 @@ This project aims to build a website allowing users to take journals in multi-me
 ### Prerequisites
 
 * A modern web browser (e.g., Chrome, Firefox, Edge, Safari)
+* Python 3.x (for running a local server)
 
 ### Running the Application
 
@@ -38,7 +39,38 @@ git clone https://github.com/knovvX/TECHIN510_Client_Project.git
 cd TECHIN510_Client_Project
 ```
 
-2. Open the `index.html` file directly in your web browser.
+2. **Important: Use the clean-branch for the latest version**
+```bash
+git checkout clean-branch
+```
+
+3. Start a local HTTP server (required for Google Authentication):
+```bash
+python -m http.server 8000
+```
+
+4. Access the application in your browser:
+```
+http://localhost:8000
+```
+
+5. For Google Drive integration (optional):
+   - Follow the instructions in `Google_Login_Setup_Guide.md` to set up your own Google Cloud project
+   - Update the API credentials in `js/google-drive-manager.js` and `login.html`
+   - Or simply use "Continue without Google Drive" for local storage only
+
+### Repository Branches
+
+- **main**: Stable release with core functionality
+- **clean-branch**: Latest development version with improved features and fixes (recommended)
+
+### Troubleshooting
+
+If you encounter any issues:
+1. Make sure you're accessing the app via http://localhost:8000 (not via file://)
+2. Check the browser console for error messages
+3. Clear browser cache and cookies if you experience persistent issues
+4. Refer to `Google_Login_Setup_Guide.md` for Google authentication troubleshooting
 
 ## 📁 Project Structure
 
