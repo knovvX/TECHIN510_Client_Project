@@ -1,0 +1,54 @@
+# Dependencies
+node_modules/
+figma-mcp-proxy/
+__pycache__/
+.ipynb_checkpoints/
+.cursor/
+
+# Figma related files
+**/figma-*.*
+**/figma_*.*
+**/*.fig
+.figma/
+figma/
+figma_exports/
+figma_assets/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+log_update.txt
+
+# Temporary files
+*.tmp 
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Image files (too large for GitHub)
+images/**/*.jpg
+images/**/*.png
+images/**/*.gif
+
+# Exclude virtual environment
+venv/
+
+# Exclude large files
+*.psd
+*.ai
+*.mp4
+*.mp3
+*.wav

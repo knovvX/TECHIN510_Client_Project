@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Flow - Fabric.js Editor</title>
+    <link rel="stylesheet" href="editor.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- 引入Fabric.js库 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.1/fabric.min.js"></script>
+    
+    <!-- 工具类库 -->
+    <script src="js/local-storage-manager.js"></script>
+    <script src="js/file-system-access.js"></script>
+    <script src="js/sticker-config.js"></script>
+    
+    <style>
+        /* 新的编辑器样式，这里只放关键样式，其他样式在editor.css中 */
+        .fabric-canvas-container {
+            margin: 0 auto;
+            background-color: #f0f0f0;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+        }
+        
+        .sticker-panel {
+            height: 100%;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .sticker-category {
+            margin-bottom: 15px;
+        }
+        
+        .sticker-category h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            padding: 5px;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        
+        .sticker-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .sticker-item {
+            border: 1px solid #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            cursor: pointer;
+            background-color: #fff;
+            transition: transform 0.2s, box-shadow 0.2s;
+            aspect-ratio: 1/1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sticker-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            border-color: #0066ff;
+        }
+        
+        .sticker-item img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            padding: 5px;
+        }
+        
+        .category-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .category-tab {
+            padding: 5px 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .category-tab:hover, .category-tab.active {
+            background-color: #0066ff;
+            color: white;
+        }
+        
+        /* 调整侧边栏和画布区域的布局 */
+        .editor-main {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+        
+        .editor-sidebar {
+            width: 280px;
+            background-color: #f9f9f9;
+            border-right: 1px solid #eee;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .editor-canvas-container {
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #e5e5e5;
+            overflow: auto;
+            height: calc(100vh - 60px);
+        }
+        
+        .editor-properties {
+            width: 280px;
+            background-color: #f9f9f9;
+            border-left: 1px solid #eee;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        /* 保存指示器样式 */
+        .save-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            background-color: #4a90e2;
+            color: white;
+            text-align: center;
+            z-index: 9999;
+            display: none;
+        }
+        
+        /* 加载指示器样式 */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <header class="editor-header">
+        <div class="logo">
+            <img src="assets/logo_final(1).png" alt="Frame Flow Logo" style="height: 30px; margin-right: 8px; vertical-align: middle;">
+            Frame Flow
+        </div>
+        <nav class="editor-nav">
+            <button id="undo-btn" class="editor-btn" title="撤销">↩️ Undo</button>
+            <button id="redo-btn" class="editor-btn" title="重做">↪️ Redo</button>
+            <button id="save-btn" class="editor-btn">Save</button>
+            <button id="preview-btn" class="editor-btn">Preview</button>
+            <button id="print-btn" class="editor-btn">Print</button>
+            <button id="close-btn" class="editor-btn">Return</button>
+        </nav>
+    </header>
+    
+    <main class="editor-main">
+        <!-- 左侧边栏 - 贴纸和上传 -->
+        <div class="editor-sidebar">
+            <div class="sidebar-tabs">
+                <div class="tab active" data-tab="stickers">Stickers</div>
+                <div class="tab" data-tab="upload">Upload</div>
+                <div class="tab" data-tab="elements">Elements</div>
+            </div>
+            
+            <!-- 贴纸面板 -->
+            <div class="tab-content active" id="stickers-content">
+                <div class="category-tabs" id="category-tabs">
+                    <!-- 分类标签将在JS中生成 -->
+                </div>
+                <div class="sticker-panel" id="sticker-panel">
+                    <!-- 贴纸内容将在JS中生成 -->
+                </div>
+            </div>
+            
+            <!-- 上传面板 -->
+            <div class="tab-content" id="upload-content">
+                <div class="upload-area">
+                    <img src="images/placeholder.jpg" alt="Upload" class="upload-icon">
+                    <p>Drag and drop files here</p>
+                    <p>or</p>
+                    <button class="upload-btn">Browse Files</button>
+                    <input type="file" id="file-upload" accept="image/*" multiple style="display: none;">
+                </div>
+                <div class="uploaded-images" id="uploaded-images">
+                    <!-- 上传的图片预览将在这里显示 -->
+                </div>
+            </div>
+            
+            <!-- 元素面板 -->
+            <div class="tab-content" id="elements-content">
+                <div class="component-category">
+                    <h3>Basic Elements</h3>
+                    <div class="component-items">
+                        <div class="component-item" id="add-text-btn">
+                            <span class="component-icon">T</span>
+                            <span>Text</span>
+                        </div>
+                        <div class="component-item" id="add-rect-btn">
+                            <span class="component-icon">□</span>
+                            <span>Rectangle</span>
+                        </div>
+                        <div class="component-item" id="add-circle-btn">
+                            <span class="component-icon">○</span>
+                            <span>Circle</span>
+                        </div>
+                        <div class="component-item" id="add-triangle-btn">
+                            <span class="component-icon">△</span>
+                            <span>Triangle</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="component-category">
+                    <h3>Decorative Elements</h3>
+                    <div class="component-items">
+                        <div class="component-item" id="add-polaroid-btn">
+                            <span class="component-icon">📷</span>
+                            <span>Polaroid</span>
+                        </div>
+                        <div class="component-item" id="add-note-btn">
+                            <span class="component-icon">📝</span>
+                            <span>Sticky Note</span>
+                        </div>
+                        <div class="component-item" id="add-frame-btn">
+                            <span class="component-icon">🖼️</span>
+                            <span>Frame</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 画布容器 -->
+        <div class="editor-canvas-container">
+            <div class="fabric-canvas-container">
+                <canvas id="fabric-canvas" width="800" height="600"></canvas>
+            </div>
+        </div>
+        
+        <!-- 属性面板 -->
+        <div class="editor-properties">
+            <div class="properties-section" id="element-properties">
+                <h3>Element Properties</h3>
+                
+                <!-- 通用属性 -->
+                <div class="property-group">
+                    <label for="element-opacity">Opacity</label>
+                    <input type="range" id="element-opacity" min="0" max="100" value="100">
+                    <span id="opacity-value">100%</span>
+                </div>
+                
+                <!-- 层级控制 -->
+                <div class="property-group">
+                    <label>Layer</label>
+                    <div class="layer-buttons">
+                        <button id="bring-forward-btn">Bring Forward</button>
+                        <button id="send-backward-btn">Send Backward</button>
+                    </div>
+                </div>
+                
+                <!-- 对齐控制 -->
+                <div class="property-group">
+                    <label>Alignment</label>
+                    <div class="alignment-buttons">
+                        <button id="align-left-btn">Left</button>
+                        <button id="align-center-btn">Center</button>
+                        <button id="align-right-btn">Right</button>
+                    </div>
+                </div>
+                
+                <!-- 文本属性 -->
+                <div class="text-properties property-section">
+                    <h3>Text Style</h3>
+                    <div class="property-group">
+                        <label for="text-font">Font</label>
+                        <select id="text-font">
+                            <option value="Poppins">Poppins</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Courier New">Courier New</option>
+                        </select>
+                    </div>
+                    <div class="property-group">
+                        <label for="text-size">Size</label>
+                        <input type="number" id="text-size" placeholder="Font size" value="20">
+                    </div>
+                    <div class="property-group">
+                        <label for="text-color">Color</label>
+                        <input type="color" id="text-color" value="#000000">
+                    </div>
+                    <div class="property-group text-style-buttons">
+                        <button id="bold-btn" class="style-btn">B</button>
+                        <button id="italic-btn" class="style-btn">I</button>
+                        <button id="underline-btn" class="style-btn">U</button>
+                    </div>
+                </div>
+                
+                <!-- 形状属性 -->
+                <div class="shape-properties property-section">
+                    <h3>Shape Style</h3>
+                    <div class="property-group">
+                        <label for="shape-color">Fill Color</label>
+                        <input type="color" id="shape-color" value="#f8f8f8">
+                    </div>
+                    <div class="property-group">
+                        <label for="shape-border-color">Border Color</label>
+                        <input type="color" id="shape-border-color" value="#000000">
+                    </div>
+                    <div class="property-group">
+                        <label for="shape-border-width">Border Width</label>
+                        <input type="range" id="shape-border-width" min="0" max="10" value="1">
+                        <span id="border-width-value">1px</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 画布属性 -->
+            <div class="properties-section">
+                <h3>Canvas Settings</h3>
+                <div class="property-group">
+                    <label for="canvas-width">Width</label>
+                    <input type="number" id="canvas-width" min="300" max="2000" value="800">
+                </div>
+                <div class="property-group">
+                    <label for="canvas-height">Height</label>
+                    <input type="number" id="canvas-height" min="300" max="2000" value="600">
+                </div>
+                <div class="property-group">
+                    <label for="canvas-background-color">Background Color</label>
+                    <input type="color" id="canvas-background-color" value="#ffffff">
+                </div>
+                <button id="apply-canvas-settings" class="editor-btn">Apply Settings</button>
+            </div>
+        </div>
+    </main>
+    
+    <!-- 保存状态指示器 -->
+    <div class="save-indicator" id="save-indicator">
+        <span class="loading-spinner"></span>
+        <span id="save-status-text">Saving your journal...</span>
+    </div>
+    
+    <!-- 保存弹窗 -->
+    <div class="modal" id="save-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Save Journal</h2>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="journal-title">Journal Title</label>
+                    <input type="text" id="journal-title" placeholder="Enter journal title">
+                </div>
+                <div class="form-group">
+                    <label for="journal-description">Description</label>
+                    <textarea id="journal-description" placeholder="Express your feelings"></textarea>
+                </div>
+                <p class="save-description">Your journal will be saved as an image and displayed on the "My Journals" page.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn">Cancel</button>
+                <button class="confirm-btn">Save</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 预览弹窗 -->
+    <div class="modal" id="preview-modal">
+        <div class="modal-content preview-modal-content">
+            <h2>Preview</h2>
+            <div class="preview-container">
+                <div id="preview-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="cancel-btn">Close</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Fabric.js编辑器核心脚本 -->
+    <script src="js/fabric-editor.js"></script>
+</body>
+</html> 

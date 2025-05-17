@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Flow</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Durer';
+            src: local('Times New Roman'), local('Georgia'), serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+        
+        .user-profile {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            z-index: 10;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.5);
+            cursor: pointer;
+        }
+        
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .user-menu {
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 10px 0;
+            display: none;
+            min-width: 150px;
+        }
+        
+        .user-menu.active {
+            display: block;
+        }
+        
+        .user-menu-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            color: #333;
+            transition: background-color 0.2s;
+        }
+        
+        .user-menu-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .user-menu-item.logout {
+            color: #e74c3c;
+            border-top: 1px solid #eee;
+            margin-top: 5px;
+            padding-top: 10px;
+        }
+        
+        .guest-badge {
+            background-color: rgba(0,0,0,0.2);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+        
+        .main-title {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .main-title img {
+            max-height: 60px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-transition"></div>
+    
+    <!-- User profile area -->
+    <div class="user-profile" id="user-profile">
+        <div class="user-info">
+            <span id="user-name"></span>
+            <span class="guest-badge" id="guest-badge" style="display:none;">Guest Mode</span>
+        </div>
+        <div class="user-avatar" id="user-avatar">
+            <img id="user-picture" src="images/placeholder.jpg" alt="User">
+        </div>
+        <div class="user-menu" id="user-menu">
+            <div class="user-menu-item">Settings</div>
+            <div class="user-menu-item logout" id="logout-btn">Sign Out</div>
+        </div>
+    </div>
+    
+    <div class="overlay-container">
+        <div class="cover-container">
+            <div class="title-background">
+                <h1 class="main-title">
+                    <img src="assets/logo_final(2).png" alt="Frame Flow Logo">
+                    Frame Flow
+                </h1>
+                <p class="tagline">Capture your life through multimedia journaling</p>
+            </div>
+            <div class="cards-container">
+                <div class="card card-left">
+                    <div class="card-content">
+                        <span class="card-label">JOURNAL SAMPLE</span>
+                        <h3 class="card-title">Travel Memories</h3>
+                        <p class="card-author">Summer Trip · Tokyo, Japan</p>
+                    </div>
+                </div>
+                <div class="card card-right">
+                    <div class="card-content">
+                        <span class="card-label">JOURNAL SAMPLE</span>
+                        <h3 class="card-title">Reading Notes</h3>
+                        <p class="card-author">Martha Wells · The Murderbot Diaries #1</p>
+                        <div class="preview-content">
+                            <div class="preview-item">
+                                <span class="preview-label">Content</span>
+                                <span class="preview-rating">★★★★☆</span>
+                            </div>
+                            <div class="preview-item">
+                                <span class="preview-label">Layout</span>
+                                <span class="preview-rating">★★★★☆</span>
+                            </div>
+                            <div class="preview-item">
+                                <span class="preview-label">Media</span>
+                                <span class="preview-rating">★★★★★</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="buttons-container">
+                <a href="#" id="start-new-journal-btn" class="start-button">Start New Journal</a>
+                <a href="journal.html" class="start-button reading-stats-button page-transition-link">My Journals</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check login status
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check if user is logged in or using guest mode
+            const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+            const isGuestMode = localStorage.getItem('is_guest_mode') === 'true';
+            
+            // If neither logged in nor using guest mode, redirect to login page
+            if (!isLoggedIn && !isGuestMode) {
+                window.location.href = 'login.html';
+                return;
+            }
+            
+            // Set up the "Start New Journal" button click event
+            document.getElementById('start-new-journal-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Check if already logged in with Google
+                const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+                
+                if (isLoggedIn) {
+                    // Already logged in, directly go to editor
+                    const pageTransition = document.querySelector('.page-transition');
+                    pageTransition.classList.add('active');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'editor.html?new=true';
+                    }, 500);
+                } else {
+                    // Not logged in, show login prompt and redirect to login page
+                    if (confirm('Using Google login allows you to save your journals to Google Drive. Login now?')) {
+                        window.location.href = 'login.html';
+                    } else {
+                        // User chooses not to login, enter in guest mode
+                        localStorage.setItem('is_guest_mode', 'true');
+                        
+                        const pageTransition = document.querySelector('.page-transition');
+                        pageTransition.classList.add('active');
+                        
+                        setTimeout(() => {
+                            window.location.href = 'editor.html?new=true';
+                        }, 500);
+                    }
+                }
+            });
+            
+            // Update UI based on login state
+            updateUserInterface();
+            
+            // Page transition effect
+            const transitionLinks = document.querySelectorAll('.page-transition-link');
+            const pageTransition = document.querySelector('.page-transition');
+            
+            transitionLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = e.currentTarget.getAttribute('href');
+                    
+                    // Activate transition effect
+                    pageTransition.classList.add('active');
+                    
+                    // Wait for transition to complete before navigating to new page
+                    setTimeout(() => {
+                        window.location.href = target;
+                    }, 500);
+                });
+            });
+            
+            // User menu toggle
+            const userAvatar = document.getElementById('user-avatar');
+            const userMenu = document.getElementById('user-menu');
+            
+            userAvatar.addEventListener('click', () => {
+                userMenu.classList.toggle('active');
+            });
+            
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!userAvatar.contains(e.target) && !userMenu.contains(e.target)) {
+                    userMenu.classList.remove('active');
+                }
+            });
+            
+            // Logout function
+            document.getElementById('logout-btn').addEventListener('click', () => {
+                // Clear user data
+                localStorage.removeItem('google_token');
+                localStorage.removeItem('user_email');
+                localStorage.removeItem('user_name');
+                localStorage.removeItem('user_picture');
+                localStorage.removeItem('is_logged_in');
+                localStorage.removeItem('is_guest_mode');
+                
+                // Redirect to login page
+                window.location.href = 'login.html';
+            });
+        });
+        
+        // Update UI based on user state
+        function updateUserInterface() {
+            const isLoggedIn = localStorage.getItem('is_logged_in') === 'true';
+            const isGuestMode = localStorage.getItem('is_guest_mode') === 'true';
+            
+            const userProfile = document.getElementById('user-profile');
+            const userName = document.getElementById('user-name');
+            const userPicture = document.getElementById('user-picture');
+            const guestBadge = document.getElementById('guest-badge');
+            
+            if (isLoggedIn) {
+                // Display user information
+                userName.textContent = localStorage.getItem('user_name') || '';
+                
+                // Set user avatar
+                const picture = localStorage.getItem('user_picture');
+                if (picture) {
+                    userPicture.src = picture;
+                }
+                
+                guestBadge.style.display = 'none';
+                
+                // Ensure logout option is in user menu
+                const userMenu = document.getElementById('user-menu');
+                if (userMenu.querySelector('.login-btn')) {
+                    userMenu.querySelector('.login-btn').style.display = 'none';
+                }
+                if (userMenu.querySelector('.logout')) {
+                    userMenu.querySelector('.logout').style.display = 'block';
+                }
+            } else if (isGuestMode) {
+                // Display guest mode
+                userName.textContent = '';
+                userPicture.src = 'images/placeholder.jpg';
+                guestBadge.style.display = 'inline-block';
+                
+                // Show login option in user menu, hide logout option
+                const userMenu = document.getElementById('user-menu');
+                
+                // Check if login button already exists, create if not
+                if (!userMenu.querySelector('.login-btn')) {
+                    const loginBtn = document.createElement('div');
+                    loginBtn.className = 'user-menu-item login-btn';
+                    loginBtn.innerHTML = 'Sign in with Google';
+                    loginBtn.style.color = '#4285f4';
+                    loginBtn.style.fontWeight = 'bold';
+                    
+                    // Add to top of menu
+                    userMenu.insertBefore(loginBtn, userMenu.firstChild);
+                    
+                    // Add click event
+                    loginBtn.addEventListener('click', () => {
+                        window.location.href = 'login.html';
+                    });
+                } else {
+                    userMenu.querySelector('.login-btn').style.display = 'block';
+                }
+                
+                // Hide logout option
+                if (userMenu.querySelector('.logout')) {
+                    userMenu.querySelector('.logout').style.display = 'none';
+                }
+            }
+        }
+    </script>
+</body>
+</html> 

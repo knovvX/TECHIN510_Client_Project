@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Flow - Login</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Overpass:wght@300;400;700&display=swap" rel="stylesheet">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Overpass', sans-serif;
+        }
+        
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .logo img {
+            max-height: 60px;
+            margin-right: 10px;
+        }
+        
+        .subtitle {
+            color: #777;
+            margin-bottom: 30px;
+        }
+        
+        .login-header {
+            margin-bottom: 30px;
+        }
+        
+        .login-options {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .login-button {
+            width: 240px;
+            padding: 12px 0;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-family: 'Overpass', sans-serif;
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+        
+        .google-login {
+            background-color: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .google-login:hover {
+            background-color: #f8f8f8;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        
+        .guest-login {
+            background-color: #f0f0f0;
+            color: #555;
+        }
+        
+        .guest-login:hover {
+            background-color: #e8e8e8;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #aaa;
+            width: 80%;
+        }
+        
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .divider::before {
+            margin-right: 10px;
+        }
+        
+        .divider::after {
+            margin-left: 10px;
+        }
+        
+        .benefits {
+            margin-top: 30px;
+            text-align: left;
+            padding: 0 20px;
+        }
+        
+        .benefits h3 {
+            color: #555;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .benefits ul {
+            margin: 0;
+            padding-left: 20px;
+            color: #777;
+        }
+        
+        .benefits li {
+            margin-bottom: 6px;
+        }
+        
+        .page-transition {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #4a6fdc;
+            transform: translateY(100%);
+            transition: transform 0.5s ease;
+            z-index: 1000;
+        }
+        
+        .page-transition.active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="page-transition"></div>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo">
+                <img src="assets/logo_final(1).png" alt="Frame Flow Logo">
+                Frame Flow
+            </div>
+            <div class="subtitle">Sign in to access your journals</div>
+        </div>
+        
+        <div class="login-options">
+            <!-- 
+            Note: Replace YOUR_GOOGLE_CLIENT_ID with your actual client ID from Google Cloud Console
+            The client ID should match the CLIENT_ID in js/google-drive-manager.js
+            Visit https://console.cloud.google.com/apis/credentials to create or get your credentials
+            -->
+            <div id="g_id_onload"
+                data-client_id="YOUR_CLIENT_ID"
+                data-context="signin"
+                data-ux_mode="popup"
+                data-callback="handleGoogleSignIn"
+                data-auto_select="true"
+                data-itp_support="true"
+                data-login_uri="http://localhost:8000">
+            </div>
+            
+            <div class="g_id_signin"
+                data-type="standard"
+                data-shape="rectangular"
+                data-theme="outline"
+                data-text="signin_with"
+                data-size="large"
+                data-logo_alignment="left">
+            </div>
+            
+            <div class="divider">or</div>
+            
+            <button class="login-button guest-login" id="guest-login-btn">
+                <span>Continue without Google Drive</span>
+            </button>
+        </div>
+        
+        <div class="benefits">
+            <h3>Benefits of signing in:</h3>
+            <ul>
+                <li>Your journals are securely stored on Google Drive</li>
+                <li>Access your journals from any device</li>
+                <li>Never lose your creative work</li>
+                <li>Share your journals with others (optional)</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Handle Google Sign In
+        function handleGoogleSignIn(response) {
+            // Get the ID token from the response
+            const idToken = response.credential;
+            
+            // Store the token and user info
+            localStorage.setItem('google_token', idToken);
+            
+            // Parse the JWT to get user info
+            const userInfo = parseJwt(idToken);
+            localStorage.setItem('user_email', userInfo.email);
+            localStorage.setItem('user_name', userInfo.name);
+            localStorage.setItem('user_picture', userInfo.picture);
+            localStorage.setItem('is_logged_in', 'true');
+            
+            // Transition to the main page
+            const pageTransition = document.querySelector('.page-transition');
+            pageTransition.classList.add('active');
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 500);
+        }
+        
+        // Parse JWT token
+        function parseJwt(token) {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            
+            return JSON.parse(jsonPayload);
+        }
+        
+        // Handle guest login
+        document.getElementById('guest-login-btn').addEventListener('click', function() {
+            // Set guest mode flag
+            localStorage.setItem('is_guest_mode', 'true');
+            localStorage.setItem('is_logged_in', 'false');
+            
+            // Transition to main page
+            const pageTransition = document.querySelector('.page-transition');
+            pageTransition.classList.add('active');
+            
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 500);
+        });
+    </script>
+</body>
+</html> 

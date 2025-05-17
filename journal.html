@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frame Flow - My Journals</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- 引入工具类 -->
+    <script src="js/local-storage-manager.js"></script>
+    <script src="js/google-drive-manager.js"></script>
+    <script src="js/file-system-access.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+        
+        .logo img {
+            height: 36px;
+            margin-right: 10px;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background-color: #4a6fdc;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a5dc5;
+        }
+        
+        .btn-secondary {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+        
+        .main-content {
+            margin-top: 48px;
+            padding: 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .page-title {
+            font-size: 32px;
+            margin-bottom: 40px;
+            text-align: center;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .journals-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 30px;
+            padding: 10px;
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
+        .journal-card {
+            background-color: transparent;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .journal-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .journal-cover {
+            position: relative;
+            height: 100%;
+            overflow: hidden;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+        }
+        
+        .journal-cover img {
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transition: transform 0.3s ease;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        
+        .journal-card:hover .journal-cover img {
+            transform: scale(1.05);
+        }
+        
+        .journal-card[data-id^="sample_"] {
+            background-color: transparent;
+            box-shadow: none;
+        }
+        
+        .journal-card[data-id^="sample_"] .journal-cover {
+            height: 100%;
+            background-color: transparent;
+        }
+        
+        .journal-card[data-id^="sample_"] .journal-info {
+            display: none;
+        }
+        
+        .journal-info-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 5;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .journal-card:hover .journal-info-overlay {
+            opacity: 1;
+        }
+        
+        .journal-title {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .journal-date {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .journal-info {
+            padding: 10px;
+            flex-grow: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 1;
+            transition: opacity 0.3s ease;
+            background-color: white;
+            text-align: center;
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        
+        .journal-card:hover .journal-info {
+            opacity: 1;
+        }
+        
+        .journal-info .journal-title {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 14px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .journal-info .journal-date {
+            display: none;
+        }
+        
+        /* 确保样例卡片显示底部标题 */
+        .journal-card[data-id^="sample_"] .journal-info {
+            display: flex;
+        }
+        
+        /* 在悬停覆盖层中只显示描述，不显示标题和日期 */
+        .journal-info-overlay .journal-title,
+        .journal-info-overlay .journal-date {
+            display: none;
+        }
+        
+        .journal-description {
+            font-size: 14px;
+            color: white;
+            line-height: 1.6;
+            text-align: center;
+            max-height: 100%;
+            overflow: auto;
+            padding: 10px;
+        }
+        
+        .journal-actions {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+        
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: rgba(255,255,255,0.9);
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(2px);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .action-btn:hover {
+            background-color: #fff;
+            transform: scale(1.1);
+        }
+        
+        .edit-btn:hover {
+            color: #4a6fdc;
+        }
+        
+        .delete-btn:hover {
+            color: #dc4a4a;
+        }
+        
+        .create-journal-card {
+            background-color: transparent;
+            border: 2px dashed #ddd;
+            border-radius: 12px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #555;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .create-journal-card:hover {
+            border-color: #4a6fdc;
+            background-color: rgba(245, 248, 255, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(74, 111, 220, 0.15);
+        }
+        
+        .create-icon {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #4a6fdc;
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: #e6eeff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .create-text {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #444;
+        }
+        
+        .create-subtext {
+            font-size: 13px;
+            color: #888;
+        }
+        
+        .sample-badge, .new-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            color: white;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .sample-badge {
+            background-color: rgba(120, 120, 120, 0.8);
+            backdrop-filter: blur(2px);
+        }
+        
+        .new-badge {
+            background-color: #4285f4;
+        }
+        
+        /* Empty state styles */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        
+        .empty-icon {
+            font-size: 60px;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .empty-title {
+            font-size: 22px;
+            color: #555;
+            margin-bottom: 10px;
+        }
+        
+        .empty-text {
+            color: #888;
+            margin-bottom: 30px;
+        }
+        
+        /* Info message styles */
+        .info-message {
+            display: flex;
+            align-items: center;
+            background-color: rgba(232, 244, 255, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            grid-column: 1 / -1;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(0, 102, 204, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .info-icon {
+            margin-right: 15px;
+            color: #0066cc;
+            font-size: 20px;
+        }
+        
+        .info-message p {
+            margin: 0;
+            color: #0066cc;
+        }
+        
+        /* Preview modal styles improved */
+        .journal-preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .preview-content {
+            position: relative;
+            max-width: 90%;
+            max-height: 90%;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        
+        .journal-description {
+            margin-top: 8px;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.4;
+            max-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+        
+        /* 添加顶部按钮的脉冲效果，当没有用户日记时吸引注意力 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); box-shadow: 0 0 15px rgba(74, 111, 220, 0.5); }
+            100% { transform: scale(1); }
+        }
+        
+        .highlight-btn {
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <div class="logo-container">
+            <a href="index.html" class="logo">
+                <img src="assets/logo_final(1).png" alt="Frame Flow Logo">
+                Frame Flow
+            </a>
+        </div>
+        <div class="nav-buttons">
+            <a href="editor.html?new=true" class="btn btn-primary">Create New Journal</a>
+            <a href="index.html" class="btn btn-secondary">Back to Home</a>
+        </div>
+    </div>
+    
+    <div class="main-content">
+        <h1 class="page-title">My Journals</h1>
+        
+        <div class="journals-grid">
+            <!-- Dynamic journals will be loaded here by displayJournals() function -->
+        </div>
+    </div>
+    
+    <!-- 简单直接的查看日记功能 -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Loading journals page...');
+        
+        // Debug: Check localStorage for journals
+        const journals = LocalStorageManager.getAllJournals();
+        console.log('Found journals in storage:', journals.length);
+        
+        try {
+            if (journals.length > 0) {
+                console.log('First journal details:', {
+                    id: journals[0].id,
+                    title: journals[0].title,
+                    date: journals[0].date,
+                    hasImageUrl: !!journals[0].imageUrl,
+                    hasImageData: !!journals[0].imageData,
+                    hasImageFilename: !!journals[0].imageFilename,
+                    imageLength: journals[0].imageUrl ? journals[0].imageUrl.length : 
+                               (journals[0].imageData ? journals[0].imageData.length : 0),
+                    saveMethod: journals[0].saveMethod || 'unknown',
+                    storageMethod: journals[0].storageMethod || 'unknown',
+                    hasThumbnail: !!journals[0].thumbnailData,
+                    driveFileId: journals[0].driveFileId || 'none'
+                });
+            }
+        } catch (e) {
+            console.error('Error checking journal details:', e);
+        }
+        
+        displayJournals();
+        
+        // Set up delete button events
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.delete-btn')) {
+                const deleteBtn = e.target.closest('.delete-btn');
+                const journalCard = deleteBtn.closest('.journal-card');
+                const journalId = journalCard.getAttribute('data-id');
+                
+                if (confirm('Are you sure you want to delete this journal? This action cannot be undone.')) {
+                    // Use LocalStorageManager to delete
+                    LocalStorageManager.deleteJournal(journalId).then(result => {
+                    if (result) {
+                        // Remove card with animation
+                        journalCard.style.opacity = '0';
+                        journalCard.style.transform = 'scale(0.8)';
+                        setTimeout(function() {
+                            journalCard.remove();
+                            
+                            // Check if there are any journals left
+                            if (document.querySelectorAll('.journal-card').length <= 1) {
+                                displayJournals(); // Only create card left, show empty state
+                            }
+                        }, 300);
+                    } else {
+                            alert('Failed to delete. Please try again.');
+                    }
+                    }).catch(error => {
+                        console.error('Error deleting journal:', error);
+                        alert('Error deleting journal: ' + error.message);
+                    });
+                }
+                
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        });
+    });
+    
+    // Display all journals
+    function displayJournals() {
+        console.log('Displaying journal list...');
+        const container = document.querySelector('.journals-grid');
+        if (!container) {
+            console.error('Journal container not found');
+            return;
+        }
+        
+        // Clear container first
+        container.innerHTML = '';
+        
+        // Getting URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const fromSave = urlParams.get('fromSave');
+        const saveId = urlParams.get('id');
+        
+        // Clear URL parameters to avoid triggering on refresh
+        if (fromSave) {
+            window.history.replaceState({}, document.title, 'journal.html');
+        }
+        
+        // Display loading
+        const loadingMessage = document.createElement('div');
+        loadingMessage.className = 'loading-message';
+        loadingMessage.textContent = 'Loading journals...';
+        loadingMessage.style.textAlign = 'center';
+        loadingMessage.style.padding = '20px';
+        loadingMessage.style.gridColumn = '1 / -1';
+        container.appendChild(loadingMessage);
+        
+        // Get all journal data
+        let journals = [];
+        try {
+            journals = LocalStorageManager.getAllJournals();
+            console.log('Found', journals.length, 'journals in localStorage');
+            
+            // Check if there's a recently saved journal and add highlight
+            if (fromSave && saveId) {
+                const recentSaved = journals.find(j => j.id === saveId);
+                if (recentSaved) {
+                    recentSaved.isRecentSaved = true;
+                    console.log('Marking recent saved journal:', saveId);
+                }
+            }
+        } catch (error) {
+            console.error('Error loading journals from localStorage:', error);
+            journals = [];
+        }
+        
+        // 检查是否有用户自己的日记（非样例）
+        const hasUserJournals = journals.length > 0 && !journals.every(j => j.isSample || j.id.startsWith('sample_'));
+        
+        // 高亮右上角的创建按钮（如果没有用户日记）
+        if (!hasUserJournals) {
+            const createBtn = document.querySelector('.nav-buttons .btn-primary');
+            if (createBtn) {
+                createBtn.classList.add('highlight-btn');
+            }
+        }
+        
+        // Create new journal card only if there are no user journals
+        if (!hasUserJournals) {
+            const createCard = document.createElement('a');
+            createCard.href = 'editor.html?new=true';
+            createCard.className = 'create-journal-card';
+            createCard.innerHTML = `
+                <div class="create-icon">+</div>
+                <div class="create-text">Create New Journal</div>
+                <div class="create-subtext">Start with a blank canvas</div>
+            `;
+            
+            // Add create card to container
+            container.appendChild(createCard);
+        }
+        
+        // Use sample journals if no actual journals exist
+        let displayedJournals = journals;
+        
+        // If no journals, display samples
+        if (journals.length === 0) {
+            console.log('No journals found, displaying samples');
+            
+            // Create sample journal data
+            displayedJournals = [
+                {
+                    id: 'sample_1',
+                    title: 'Breakfast Journal',
+                    created: new Date(2025, 4, 15).getTime(),
+                    imageUrl: 'example/example(1).png',
+                    description: '记录了我今天的早餐：热腾腾的粥和新鲜的水果。早晨的阳光透过窗户，为食物增添了温暖的色彩。',
+                    isSample: true
+                },
+                {
+                    id: 'sample_2',
+                    title: 'Spring Trip',
+                    created: new Date(2025, 3, 23).getTime(),
+                    imageUrl: 'example/example(2).png',
+                    description: '春日旅行中的美好回忆，拍下了樱花盛开的景色。那天的微风轻轻吹拂，花瓣如雪般飘落。',
+                    isSample: true
+                },
+                {
+                    id: 'sample_3',
+                    title: 'Fruit Study',
+                    created: new Date(2025, 3, 10).getTime(),
+                    imageUrl: 'images/Food/Fruits/香蕉.png',
+                    description: '研究不同水果的色彩和形状。香蕉的黄色与背景形成鲜明对比，简单而富有活力。',
+                    isSample: true
+                }
+            ];
+            
+            // Display info message
+            const infoMessage = document.createElement('div');
+            infoMessage.className = 'info-message';
+            infoMessage.innerHTML = `
+                <div class="info-icon"><i class="fas fa-info-circle"></i></div>
+                <p>这些是样例日记。创建并保存您自己的日记后，它们将显示在这里。</p>
+            `;
+            infoMessage.style.gridColumn = '1 / -1';
+            container.appendChild(infoMessage);
+        } else if (!hasUserJournals) {
+            // 如果只有样例日记，显示提示信息
+            const infoMessage = document.createElement('div');
+            infoMessage.className = 'info-message';
+            infoMessage.innerHTML = `
+                <div class="info-icon"><i class="fas fa-info-circle"></i></div>
+                <p>点击右上角的"Create New Journal"按钮创建您自己的日记。</p>
+            `;
+            infoMessage.style.gridColumn = '1 / -1';
+            container.appendChild(infoMessage);
+        }
+        
+        // Remove loading message and create journal cards
+        setTimeout(() => {
+            // Remove loading message
+            loadingMessage.remove();
+            
+            // Create journal cards
+            displayedJournals.forEach(journal => {
+                try {
+                    // Create card element
+                    const card = document.createElement('div');
+                    card.className = 'journal-card';
+                    if (journal.isRecentSaved) {
+                        card.classList.add('just-saved');
+                    }
+                    card.setAttribute('data-id', journal.id);
+                    
+                    // Format date
+                    const date = new Date(journal.created);
+                    const formattedDate = date.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
+                    // 使用占位图片先构建卡片
+                    const placeholder = 'images/placeholder.jpg';
+                    const isSample = journal.isSample || journal.id.startsWith('sample_');
+                    
+                    // 图片加载函数定义
+                    const loadImage = async (j) => {
+                        if (isSample) {
+                            // For samples, use the sample image path directly
+                            return j.imageUrl || 'images/placeholder.jpg';
+                        }
+                        
+                        // For actual journals, prioritize thumbnail
+                        if (j.thumbnailData) {
+                            console.log(`Journal ${j.id}: Using thumbnail data`);
+                            return j.thumbnailData;
+                        } 
+                        
+                        // Try to get full image from storage based on storage method
+                        try {
+                            if (j.storageMethod === 'google_drive' && j.driveFileId && typeof GoogleDriveManager !== 'undefined') {
+                                console.log(`Journal ${j.id}: Attempting to load from Google Drive`);
+                                const imageData = await GoogleDriveManager.getJournalImage(j.id);
+                                if (imageData) {
+                                    console.log(`Journal ${j.id}: Got image from Google Drive`);
+                                    return imageData;
+                                }
+                            }
+                        } catch (e) {
+                            console.error(`Failed to load from Google Drive for ${j.id}:`, e);
+                        }
+                        
+                        // Try local storage
+                        try {
+                            const fullImageData = await LocalStorageManager.getJournalImage(j.id);
+                            if (fullImageData) {
+                                console.log(`Journal ${j.id}: Got image from local storage`);
+                                return fullImageData;
+                            }
+                        } catch (e) {
+                            console.error(`Failed to load from local storage for ${j.id}:`, e);
+                        }
+                        
+                        // Use imageData or imageUrl if available
+                        if (j.imageData) {
+                            console.log(`Journal ${j.id}: Using embedded full image data`);
+                            return j.imageData;
+                        } else if (j.imageUrl) {
+                            console.log(`Journal ${j.id}: Using image URL ${j.imageUrl}`);
+                            return j.imageUrl;
+                        }
+                        
+                        // Fallback to placeholder
+                        console.warn(`Journal ${j.id}: No image found, using placeholder`);
+                        return 'images/placeholder.jpg';
+                    };
+                    
+                    // Build card HTML
+                    card.innerHTML = `
+                        <div class="journal-cover">
+                            <img src="${placeholder}" alt="${journal.title}" 
+                                onerror="this.src='images/placeholder.jpg'; 
+                                console.error('Failed to load journal image for ${journal.id}');">
+                            ${isSample ? '<div class="sample-badge">Sample</div>' : ''}
+                            ${journal.isRecentSaved ? '<div class="new-badge">Just Saved</div>' : ''}
+                            <div class="journal-info-overlay">
+                                <div class="journal-description">${journal.description || 'Nothing to show, but a happy day!'}</div>
+                            </div>
+                        </div>
+                        <div class="journal-info">
+                            <h3 class="journal-title">${journal.title}</h3>
+                        </div>
+                        <div class="journal-actions">
+                            <button class="action-btn edit-btn" data-id="${journal.id}" title="Edit"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn delete-btn" data-id="${journal.id}" ${isSample ? 'disabled' : ''} title="Delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                    
+                    // 然后异步加载图片（在卡片已添加到DOM后）
+                    loadImage(journal).then(imageSrc => {
+                        const img = card.querySelector('img');
+                        if (img) {
+                            img.src = imageSrc;
+                            console.log(`成功加载图片 ${journal.id}:`, imageSrc.substring(0, 50) + '...');
+                        } else {
+                            console.error(`未找到图片元素 ${journal.id}`);
+                        }
+                    }).catch(err => {
+                        console.error(`加载图片失败 ${journal.id}:`, err);
+                    });
+                    
+                    // If it's a sample, reduce opacity
+                    if (isSample) {
+                        card.style.opacity = "0.9";
+                    }
+                    
+                    // If it's just saved, add highlight effect
+                    if (journal.isRecentSaved) {
+                        card.style.transform = "scale(1.05)";
+                        card.style.boxShadow = "0 8px 25px rgba(74, 111, 220, 0.3)";
+                        
+                        // Restore to normal after 3 seconds
+                        setTimeout(() => {
+                            card.style.transition = "all 0.5s ease";
+                            card.style.transform = "";
+                            card.style.boxShadow = "";
+                        }, 3000);
+                    }
+                    
+                    // Add to container
+                    container.appendChild(card);
+                    
+                    // Add click event - view large image directly, don't open editor
+                    if (!isSample) {
+                        card.addEventListener('click', function(e) {
+                            // If not clicking button area, view large image directly
+                            if (!e.target.closest('.action-btn')) {
+                                // Find and load full image
+                                const loadFullImage = async () => {
+                                    let fullImage = null;
+                                    
+                                    try {
+                                        if (journal.storageMethod === 'google_drive' && typeof GoogleDriveManager !== 'undefined') {
+                                            fullImage = await GoogleDriveManager.getJournalImage(journal.id);
+                                        }
+                                        
+                                        if (!fullImage) {
+                                            fullImage = await LocalStorageManager.getJournalImage(journal.id);
+                                        }
+                                        
+                                        if (!fullImage) {
+                                            fullImage = journal.imageData || card.querySelector('img').src;
+                                        }
+                                        
+                                        if (fullImage) {
+                                            // Show full image preview modal
+                                            showFullImagePreview(journal, fullImage);
+                                        }
+                                    } catch (error) {
+                                        console.error('Error loading full image:', error);
+                                        alert('Error loading image preview. Please try again.');
+                                    }
+                                };
+                                
+                                loadFullImage();
+                            }
+                        });
+                        
+                        // Edit button event
+                        const editBtn = card.querySelector('.edit-btn');
+                        if (editBtn) {
+                            editBtn.addEventListener('click', function(e) {
+                                e.stopPropagation(); // Prevent event bubbling
+                                window.location.href = 'editor.html?id=' + journal.id;
+                            });
+                        }
+                        
+                        // Delete button event
+                        const deleteBtn = card.querySelector('.delete-btn');
+                        if (deleteBtn) {
+                            deleteBtn.addEventListener('click', function(e) {
+                                e.stopPropagation(); // Prevent event bubbling
+                                
+                                if (confirm('Are you sure you want to delete this journal? This action cannot be undone.')) {
+                                    // Use LocalStorageManager delete
+                                    LocalStorageManager.deleteJournal(journal.id).then(result => {
+                                        if (result) {
+                                            // Animation effect remove card
+                                            card.style.opacity = '0';
+                                            card.style.transform = 'scale(0.8)';
+                                            setTimeout(function() {
+                                    card.remove();
+                                                
+                                                // Check if there are any journals left
+                                                const remainingCards = document.querySelectorAll('.journal-card:not(.create-journal-card)');
+                                                if (remainingCards.length === 0) {
+                                                    // If no journals left, reload page to display samples
+                                        displayJournals();
+                                    }
+                                            }, 300);
+                                        } else {
+                                            alert('Failed to delete. Please try again.');
+                                        }
+                                    }).catch(error => {
+                                        console.error('Error deleting journal:', error);
+                                        alert('Error deleting journal: ' + error.message);
+                                    });
+                                }
+                            });
+                        }
+                    } else {
+                        // Sample card click prompt
+                        card.addEventListener('click', function(e) {
+                            if (!e.target.closest('.action-btn')) {
+                                alert('This is a sample journal. Please create and save your own journals.');
+                            }
+                        });
+                        
+                        // Sample card edit button
+                        const editBtn = card.querySelector('.edit-btn');
+                        if (editBtn) {
+                            editBtn.addEventListener('click', function(e) {
+                                e.stopPropagation();
+                                alert('This is a sample journal and cannot be edited. Please create a new journal.');
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error creating journal card:', error, journal);
+                }
+            });
+            
+            console.log('Journal display completed');
+        }, 100);
+    }
+
+    // Show journal full image preview
+    function showFullImagePreview(journal, imageData) {
+        // Create the modal container
+        const modal = document.createElement('div');
+        modal.className = 'journal-preview-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.width = '100%';
+        modal.style.height = '100%';
+        modal.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        modal.style.zIndex = '2000';
+        modal.style.display = 'flex';
+        modal.style.alignItems = 'center';
+        modal.style.justifyContent = 'center';
+        modal.style.opacity = '0';
+        modal.style.transition = 'opacity 0.3s ease';
+        
+        // Create content container
+        const content = document.createElement('div');
+        content.className = 'preview-content';
+        content.style.position = 'relative';
+        content.style.maxWidth = '90%';
+        content.style.maxHeight = '90%';
+        content.style.backgroundColor = 'white';
+        content.style.borderRadius = '12px';
+        content.style.overflow = 'hidden';
+        content.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
+        content.style.transform = 'scale(0.95)';
+        content.style.transition = 'transform 0.3s ease';
+        
+        // Create header
+        const header = document.createElement('div');
+        header.style.padding = '15px';
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
+        header.style.borderBottom = '1px solid #ddd';
+        header.style.backgroundColor = '#f9f9f9';
+        
+        // Title
+        const title = document.createElement('h3');
+        title.textContent = journal.title || 'Journal Preview';
+        title.style.margin = '0';
+        title.style.fontSize = '18px';
+        title.style.fontWeight = '600';
+        header.appendChild(title);
+        
+        // Close button
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '&times;';
+        closeBtn.style.background = 'none';
+        closeBtn.style.border = 'none';
+        closeBtn.style.fontSize = '24px';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.style.color = '#555';
+        closeBtn.style.width = '30px';
+        closeBtn.style.height = '30px';
+        closeBtn.style.display = 'flex';
+        closeBtn.style.alignItems = 'center';
+        closeBtn.style.justifyContent = 'center';
+        closeBtn.style.borderRadius = '50%';
+        closeBtn.style.transition = 'background-color 0.2s ease';
+        closeBtn.addEventListener('mouseenter', () => {
+            closeBtn.style.backgroundColor = '#f0f0f0';
+        });
+        closeBtn.addEventListener('mouseleave', () => {
+            closeBtn.style.backgroundColor = 'transparent';
+        });
+        closeBtn.onclick = () => {
+            modal.style.opacity = '0';
+            content.style.transform = 'scale(0.95)';
+            setTimeout(() => document.body.removeChild(modal), 300);
+        };
+        header.appendChild(closeBtn);
+        
+        // Image container
+        const imgContainer = document.createElement('div');
+        imgContainer.style.padding = '20px';
+        imgContainer.style.textAlign = 'center';
+        imgContainer.style.overflow = 'auto';
+        imgContainer.style.maxHeight = 'calc(90vh - 130px)';
+        
+        // Image element
+        const img = document.createElement('img');
+        img.src = imageData;
+        img.alt = journal.title || 'Journal Image';
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = 'calc(90vh - 170px)';
+        img.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+        imgContainer.appendChild(img);
+        
+        // Add description if available
+        if (journal.description) {
+            const desc = document.createElement('div');
+            desc.textContent = journal.description;
+            desc.style.marginTop = '20px';
+            desc.style.padding = '15px';
+            desc.style.backgroundColor = '#f9f9f9';
+            desc.style.borderRadius = '4px';
+            desc.style.fontSize = '14px';
+            desc.style.color = '#555';
+            desc.style.lineHeight = '1.6';
+            imgContainer.appendChild(desc);
+        }
+        
+        // Footer with date and edit button
+        const footer = document.createElement('div');
+        footer.style.padding = '15px';
+        footer.style.borderTop = '1px solid #ddd';
+        footer.style.display = 'flex';
+        footer.style.justifyContent = 'space-between';
+        footer.style.alignItems = 'center';
+        footer.style.backgroundColor = '#f9f9f9';
+        
+        // Date info
+        const dateInfo = document.createElement('div');
+        const date = new Date(journal.created || Date.now());
+        dateInfo.textContent = date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        dateInfo.style.color = '#777';
+        dateInfo.style.fontSize = '14px';
+        footer.appendChild(dateInfo);
+        
+        // Edit button
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.style.padding = '8px 15px';
+        editBtn.style.backgroundColor = '#4a6fdc';
+        editBtn.style.color = 'white';
+        editBtn.style.border = 'none';
+        editBtn.style.borderRadius = '4px';
+        editBtn.style.cursor = 'pointer';
+        editBtn.style.fontSize = '14px';
+        editBtn.style.transition = 'background-color 0.2s ease';
+        editBtn.addEventListener('mouseenter', () => {
+            editBtn.style.backgroundColor = '#3a5dc5';
+        });
+        editBtn.addEventListener('mouseleave', () => {
+            editBtn.style.backgroundColor = '#4a6fdc';
+        });
+        editBtn.onclick = (e) => {
+            e.stopPropagation();
+            window.location.href = 'editor.html?id=' + journal.id;
+        };
+        footer.appendChild(editBtn);
+        
+        // Assemble modal
+        content.appendChild(header);
+        content.appendChild(imgContainer);
+        content.appendChild(footer);
+        modal.appendChild(content);
+        
+        // Close on background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.opacity = '0';
+                content.style.transform = 'scale(0.95)';
+                setTimeout(() => document.body.removeChild(modal), 300);
+            }
+        });
+        
+        // Add to document
+        document.body.appendChild(modal);
+        
+        // Trigger animation after a small delay
+        setTimeout(() => {
+            modal.style.opacity = '1';
+            content.style.transform = 'scale(1)';
+        }, 10);
+        
+        // Add keyboard support (Escape to close)
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                modal.style.opacity = '0';
+                content.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    document.body.removeChild(modal);
+                    document.removeEventListener('keydown', handleKeyDown);
+                }, 300);
+            }
+        };
+        document.addEventListener('keydown', handleKeyDown);
+    }
+    </script>
+</body>
+</html> 
